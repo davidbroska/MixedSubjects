@@ -1,0 +1,12 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+.DS_Store
+Data/Awad2018
+Data/Hainmueller2014
+Data/PromptGPT
+Data/Takemoto2023
+Data/readme_data
+Data/DataForAnalysis.csv
+IntegrativeExperimentsGAI.Rproj
