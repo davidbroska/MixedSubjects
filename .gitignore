@@ -3,10 +3,10 @@
 .RData
 .Ruserdata
 .DS_Store
-Data/Awad2018
-Data/Hainmueller2014
 Data/PromptGPT
-Data/Takemoto2023
-Data/readme_data
-Data/Agrawal2020
+MoralMachine/Data/Awad2018
+MoralMachine/Data/Hainmueller2014
+MoralMachine/Data/PromptGPT
+MoralMachine/Data/Takemoto2023
+MoralMachine/Data/Agrawal2020
 IntegrativeExperimentsGAI.Rproj

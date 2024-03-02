@@ -18,13 +18,19 @@ df %>%
   geom_text(aes(N,n,label=width_ols),data = text,size =2,inherit.aes = F, color="white") + 
   labs(fill = "Width of PPI CI", y = "n of human responses",
        x = "N of GPT4 responses", title="Contour plot of width of CI across sample sizes of human responses and GPT predictions")
-ggsave("Figures/3_ContourPlot.png",width=10,height=8)
+ggsave("Figures/4_ContourPlot.png",width=10,height=8)
 # This contour shows the width of the PPI confidence interval (CI) as it varies by the number of GPT responses (N) and the number of human responses (n) with darker colors showing smaller CIs. 
 # Unfortunately, the width of the PPI CI varies mostly by n and not by N. For reference, I also added the width of the OLS confidence interval for n decreases with additional n as one would expect.
 
-# df %>% 
-#   filter(N %in% c(5000)) %>% 
-#   pivot_longer(cols = c(width_ols,width_ppi)) %>% 
-#   ggplot(aes(n, value,color = name)) +
-#   facet_wrap(~ var, ncol=7)
-# ggsave("Figures/3_ContourPlot.png",width=6,height=8)
+nhuman = 250
+df %>%
+  filter(n == nhuman) %>% 
+  pivot_longer(cols = c(width_ols,width_ppi)) %>%
+  ggplot(aes(N, value,color = name)) +
+  geom_line() +
+  facet_wrap(~ var, ncol=7) +
+  labs(color = "Width of CI", y = "Width of CI",
+       x = "N of GPT4 responses", title="Contour plot of width of CI across sample size of GPT predictions with n=250 human responses") +
+  theme(legend.position = "bottom")
+ggsave("Figures/4_CIWidthPPIandOLSacrossN.png",width=10,height=8)
+
