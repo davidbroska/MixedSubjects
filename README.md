@@ -1,5 +1,10 @@
 # IntegrativeExperimentsGAI
 
-We use the `SharedResponses.csv.tar.gz` data file from Awad et al. (2018) from [osf.io](https://osf.io/3hvt2/?view_only=4bb49492edee4a8eb1758552a362a2cf)
+## Moral Machine Experiment
 
-The GPT predictions are from Takemoto (2023). The data are downloadable from this [dropbox](https://www.dropbox.com/sh/1y8imez75gz2i92/AAAuOwOz20ohZ8F6A1KF_kiCa?dl=0). Please refer to [osf.io](https://osf.io/wt6mc?view_only=4bb49492edee4a8eb1758552a362a2cf) for detailed descriptions.
+We use the `SharedResponses.csv.tar.gz` data file from Awad et al. (2018) from [osf.io](https://osf.io/3hvt2/?view_only=4bb49492edee4a8eb1758552a362a2cf). This [document](https://osf.io/wt6mc?view_only=4bb49492edee4a8eb1758552a362a2cf) is a useful description of the data structure. 
+
+The GPT predictions are from Takemoto (2023). The data are downloadable from this [dropbox](https://www.dropbox.com/sh/1y8imez75gz2i92/AAAuOwOz20ohZ8F6A1KF_kiCa?dl=0). 
+
+These two data sources were joined on all covariates except for `Saved` (the dependent variable) and `Intervention` (a feature of the decision). Trying to join on Intervention leads to having no variation in the joined dataset. Possibly I overlooked something here (e.g. the paired data structure: two rows per respondent).
+
