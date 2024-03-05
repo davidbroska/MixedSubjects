@@ -3,7 +3,10 @@
 .RData
 .Ruserdata
 .DS_Store
-Data/PromptGPT
+Simulation
+*.csv
+MoralMachine/PromptGPT
+MoralMachine/Data/Temp
 MoralMachine/Data/Awad2018
 MoralMachine/Data/Hainmueller2014
 MoralMachine/Data/PromptGPT
