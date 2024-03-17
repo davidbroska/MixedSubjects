@@ -191,9 +191,9 @@ for (i in 1:length(unique_n)) {
   boxp_data <- subset_data %>% 
     group_by(N,delta) %>% 
     summarize(y000 = min(est),
-              y005 = quantile(est,0.05),
+              y0025 = quantile(est,0.025),
               y050 = quantile(est,0.50),
-              y095 = quantile(est,0.95),
+              y0975 = quantile(est,0.975),
               y100 = max(est))
   
   plot2 <- ggplot(boxp_data, aes(x = factor(N), fill = factor(delta))) +
