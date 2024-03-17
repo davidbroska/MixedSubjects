@@ -135,10 +135,10 @@ df.intervention <- data.frame(diff.width=as.numeric(),
                               N = as.numeric(),
                               delta = as.numeric())
 
-ns <- c(50, 100, 250, 500, 1000, 5000)
-Ns <- c(1000, 2000, 3000, 4000, 5000)
+ns <- c(50, 100, 250, 500, 1000, 2000)
+Ns <- c(50, 100, 250, 500, 1000, 2000)
 deltas <- c(0.01, 0.1, 0.2, 0.3)
-repeats <- 50
+repeats <- 75
 
 total <- length(ns) * length(Ns) * length(deltas) * repeats
 runs = 0
@@ -164,6 +164,10 @@ unique_n <- unique(df.intervention$n)
 # Create an empty list to store plots
 plot_list <- list()
 
+# set baseline font size
+bsize = 8.5
+
+
 # Loop through each unique value of n
 for (i in 1:length(unique_n)) {
   # Subset the data for the current value of n
@@ -177,10 +181,10 @@ for (i in 1:length(unique_n)) {
   # Top row: Line plot of avg diff.width.ci vs. N, colored by delta
   plot1 <- ggplot(avg_diff, aes(x = N, y = avg_diff_width_ci, color = factor(delta))) +
     geom_line(size=1) +
-    labs(title = paste("n =", unique_n[i]), x = "Number of LLM Obs.", 
-         y = "E(Change in width of 95% CI)") +
+    labs(title = paste("n =", unique_n[i]), x = NULL,y=NULL)+
+         #, x = "Number of LLM Obs.", y = "E(Change in width of 95% CI)") +
     scale_color_discrete(name = "Delta") +
-    theme_minimal() +
+    theme_minimal(base_size = bsize) +
     theme(legend.position = "bottom")
   
   # Bottom row: Boxplot of est vs. N, colored by delta
@@ -195,10 +199,11 @@ for (i in 1:length(unique_n)) {
   plot2 <- ggplot(boxp_data, aes(x = factor(N), fill = factor(delta))) +
     geom_boxplot(aes(ymin=y000, lower=y005, middle=y050, upper=y095, ymax=y100),
                  stat = "identity") +
-    labs(title = NULL, x = "Number of LLM Obs.", y = "MAP of the Treatment Effect") +
+    labs(title = NULL, x = NULL, y = NULL)+
+    #labs(title = NULL, x = "Number of LLM Obs.", y = "MAP of the Treatment Effect") +
     scale_fill_discrete(name = "Delta") +
     geom_hline(yintercept = true_t, linetype = "dashed") +
-    theme_minimal() +
+    theme_minimal(base_size = bsize) +
     theme(legend.position = "bottom")
   
   # Add plots to the list
@@ -212,14 +217,16 @@ for (i in 1:length(unique_n)) {
 
 
 # Arrange plots in a grid and display
-#grid.arrange(grobs = plot_list, ncol = 6)
+plot_list[[1]]  = plot_list[[1]] + labs(y="E(Change in width of 95% CI)")
+plot_list[[7]]  = plot_list[[7]] + labs(y="MAP of the Treatment Effect")
+for(p in 7:12) plot_list[[p]] = plot_list[[p]] + labs(x="Number of LLM Observations") 
 
 ggarrange(plot_list[[1]],plot_list[[2]],plot_list[[3]],plot_list[[4]],plot_list[[5]],plot_list[[6]],
           plot_list[[7]],plot_list[[8]],plot_list[[9]],plot_list[[10]],plot_list[[11]],plot_list[[12]],
           ncol = 6,nrow=2,common.legend = T,legend = "bottom")
-ggsave("MoralMachine/Code/4_Bayes/BayesPlot.png",bg="white")
+ggsave("MoralMachine/Code/4_Bayes/BayesPlot_Run2.png",bg="white", width = 13.5, height = 6)
 
 # Reset the layout to the default
 par(mfrow = c(1, 1))
 
-write_csv(df.intervention,"MoralMachine/Code/4_Bayes/BayesRM_dfintervention_Run2.csv")
+#write_csv(df.intervention,"MoralMachine/Code/4_Bayes/BayesRM_dfintervention_Run2.csv")
