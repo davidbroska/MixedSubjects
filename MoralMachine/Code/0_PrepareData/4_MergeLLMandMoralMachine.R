@@ -3,6 +3,43 @@ library(dplyr)
 library(stringr)
 library(data.table)
 
+calcWeightsTheoretical <- function(profiles){
+  p <- apply(profiles,1,CalcTheoreticalInt)
+  return(1/p)
+}
+
+CalcTheoreticalInt <- function(X){
+  if (X["Intervention"]==0){
+    if (X["Barrier"]==0){
+      if (X["PedPed"] == 1) p <- 0.48
+      else p <- 0.32
+      
+      if (X["CrossingSignal"]==0) p <- p*0.48
+      else if (X["CrossingSignal"]==1) p <- p*0.2
+      else p <- p * 0.32
+    }
+    else p <- 0.2
+  }
+  else {
+    if (X["Barrier"]==0){
+      if (X["PedPed"] == 1) {
+        p <- 0.48
+        if (X["CrossingSignal"]==0) p <- p*0.48
+        else if (X["CrossingSignal"]==1) p <- p*0.32
+        else p <- p * 0.2
+      }
+      else {
+        p <- 0.2
+        if (X["CrossingSignal"]==0) p <- p*0.48
+        else if (X["CrossingSignal"]==1) p <- p*0.2
+        else p <- p * 0.32
+      }
+    }
+    else p <- 0.32
+  }
+  return(p)
+}
+
 # Load human responses
 SharedResponsesWide = fread(unzip("MoralMachine/Data/SharedResponsesCleanWide.zip"), 
                             key = "ResponseID")
@@ -16,7 +53,7 @@ all(sapply(SharedResponsesWide, function(x) sum(is.na(x))) == 0)
 # Define columns to join on
 Cols = colnames(SharedResponsesWide)
 JoinVars = Cols[- which(Cols %in% c("ResponseID","Saved_1","Saved_2"))]
-UniqVars = c(JoinVars,"Intervention_1","Intervention_2")
+
 # Keep unique rows
 SRWD = distinct(SharedResponsesWide, pick(all_of(JoinVars)), .keep_all=T)
 
@@ -27,6 +64,7 @@ mode <- function(x) {
 
 # Load LLM data
 GPT4 = fread(unzip("MoralMachine/Data/GPT4wide.zip")) %>% 
+  mutate(across(contains("ScenarioType"), ~ str_replace(.,"Social Value","Social Status"))) %>% 
   group_by(across(all_of(JoinVars))) %>% 
   mutate(#SavedProp_1 = mean(Saved_1), SavedProp_2 = mean(Saved_2),
          #Saved_1 = mode(Saved_1),  Saved_2 = mode(Saved_2)
@@ -35,6 +73,7 @@ GPT4 = fread(unzip("MoralMachine/Data/GPT4wide.zip")) %>%
   distinct(pick(all_of(JoinVars)), .keep_all=T)
   
 GPT3 = fread(unzip("MoralMachine/Data/GPT3wide.zip")) %>% 
+  mutate(across(contains("ScenarioType"), ~ str_replace(.,"Social Value","Social Status"))) %>% 
   group_by(across(all_of(JoinVars))) %>% 
   mutate(#SavedProp_1 = mean(Saved_1), SavedProp_2 = mean(Saved_2),
          #Saved_1 = mode(Saved_1), Saved_2 = mode(Saved_2)
@@ -43,6 +82,7 @@ GPT3 = fread(unzip("MoralMachine/Data/GPT3wide.zip")) %>%
   distinct(pick(all_of(JoinVars)), .keep_all=T)
 
 Llama2 = fread(unzip("MoralMachine/Data/Llama2wide.zip")) %>% 
+  mutate(across(contains("ScenarioType"), ~ str_replace(.,"Social Value","Social Status"))) %>% 
   group_by(across(all_of(JoinVars))) %>% 
   mutate(#SavedProp_1 = mean(Saved_1), SavedProp_2 = mean(Saved_2),
          #Saved_1 = mode(Saved_1), Saved_2 = mode(Saved_2)
@@ -51,6 +91,7 @@ Llama2 = fread(unzip("MoralMachine/Data/Llama2wide.zip")) %>%
   distinct(pick(all_of(JoinVars)), .keep_all=T)
 
 Palm2 = fread(unzip("MoralMachine/Data/Palm2wide.zip")) %>% 
+  mutate(across(contains("ScenarioType"), ~ str_replace(.,"Social Value","Social Status"))) %>% 
   group_by(across(all_of(JoinVars))) %>% 
   mutate(#SavedProp_1 = mean(Saved_1), SavedProp_2 = mean(Saved_2),
          #Saved_1 = mode(Saved_1), Saved_2 = mode(Saved_2)
@@ -104,9 +145,14 @@ JoinedLong %>%
             Correlation = cor(Saved,value,use="complete.obs"))
 count(JoinedLong,ResponseID,sort = T)
 
+# calculate weights for conjoint analysis 
+JoinedLong$weights = calcWeightsTheoretical(JoinedLong)
+
 # save to file
 fwrite(JoinedWide, "MoralMachine/Data/JoinedWide.csv")
 zip(zipfile = 'MoralMachine/Data/JoinedWide', files = "MoralMachine/Data/JoinedWide.csv")
 fwrite(JoinedLong, "MoralMachine/Data/JoinedLong.csv")
 zip(zipfile = 'MoralMachine/Data/JoinedLong', files = "MoralMachine/Data/JoinedLong.csv")
+
+
 

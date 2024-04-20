@@ -1,3 +1,4 @@
+# This script creates the indecices of rows of US respondents for which two rows are available 
 library(data.table)
 
 # Read moral machine dataset

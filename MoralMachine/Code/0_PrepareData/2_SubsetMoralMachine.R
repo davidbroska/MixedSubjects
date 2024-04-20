@@ -1,8 +1,7 @@
-
-
+# Subset data to those with two rows and US respondents. Also remove NA values
 library(data.table)
 library(dplyr)
-# We are going to join on all of the variables below except for Intervention and Saved
+
 Covs <- c("AttributeLevel", "ScenarioTypeStrict", "ScenarioType",
   "Intervention", "PedPed", "Barrier", "CrossingSignal",
   "NumberOfCharacters", "DiffNumberOFCharacters", "LeftHand",
@@ -29,3 +28,6 @@ SharedResponsesClean$Man = as.integer(SharedResponsesClean$Man)
 fwrite(SharedResponsesClean, "MoralMachine/Data/SharedResponsesClean.csv")
 
 zip(zipfile = 'MoralMachine/Data/SharedResponsesClean', files = "MoralMachine/Data/SharedResponsesClean.csv")
+
+
+
