@@ -4,7 +4,7 @@
 .Ruserdata
 .DS_Store
 Simulation
-*.csv
+MoralMachine/Data/*
 MoralMachine/PromptGPT
 MoralMachine/Data/Temp
 MoralMachine/Data/Awad2018
@@ -22,7 +22,14 @@ MoralMachine/Data/SharedResponsesClean.zip
 MoralMachine/Data/SharedResponsesCleanWide.zip
 MoralMachine/Data/JoinedLong.zip
 MoralMachine/Data/JoinedWide.zip
+
+BayesRM_dfintervention_Run1.csv
+BayesRM_dfintervention_Run2.csv
+
 Data/usa_00004.csv.gz
+Data/SharedResponsesSurvey.csv
+
+1_DataCollection/
 
 LLMs_and_Social_Science240325.pdf
 

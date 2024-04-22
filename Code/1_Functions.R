@@ -6,7 +6,7 @@ library(tidyr)
 library(ggplot2)
 
 # default theme for ggplot2
-theme_set(theme_bw())
+theme_set(theme_bw(base_family = "serif"))
 
 
 # Custom functions

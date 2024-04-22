@@ -18,26 +18,13 @@ acs = get_filepath("usa_00004.csv.gz") %>%
     # Correct income for years
     CorrPINCP = as.numeric(PINCP)*as.numeric(ADJINC)/1000000,
     
-    IncomeBracket = case_when(
-      CorrPINCP<5000 ~"Less than 5000",
-      CorrPINCP>=5000 & CorrPINCP<10000 ~"5000",
-      CorrPINCP>=10000 & CorrPINCP<15000 ~"10000",
-      CorrPINCP>=15000 & CorrPINCP<25000 ~"15000",
-      CorrPINCP>=25000 & CorrPINCP<35000 ~"25000",
-      CorrPINCP>=35000 & CorrPINCP<50000 ~"35000",
-      CorrPINCP>=50000 & CorrPINCP<80000 ~"50000",
-      CorrPINCP>=80000 & CorrPINCP<100000 ~"80000",
-      CorrPINCP>=100000 ~"More than 100000") %>% 
-      factor(levels=c("Less than 5000","5000","10000","15000","25000",
-                      "35000","50000","80000","More than 100000")),
-    
     IncomeBracketSmall = case_when(
-      CorrPINCP<5000 ~"Less than 5000",
-      CorrPINCP>=5000 & CorrPINCP<25000 ~"5000",
-      CorrPINCP>=25000 & CorrPINCP<50000 ~"25000",
-      CorrPINCP>=50000 & CorrPINCP<100000 ~"50000",
-      CorrPINCP>=100000 ~"More than 100000") %>% 
-      factor(levels=c("Less than 5000","5000","25000","50000","More than 100000")),
+      CorrPINCP<5000 ~"$0-$5,000",
+      CorrPINCP>=5000 & CorrPINCP<25000 ~"$5,001-\n$25,000",
+      CorrPINCP>=25000 & CorrPINCP<50000 ~"$25,001-\n$50,000",
+      CorrPINCP>=50000 & CorrPINCP<100000 ~"$50,001-\n$100,000",
+      CorrPINCP>=100000 ~"More than\n$100,001") %>% 
+      factor(levels=c("$0-$5,000","$5,001-\n$25,000","$25,001-\n$50,000","$50,001-\n$100,000","More than\n$100,001")),
     
     AgeBracket = case_when(AGEP>=15 & AGEP<25 ~"15-24",
                            AGEP>=25 & AGEP<35 ~"25-34",
@@ -155,13 +142,13 @@ summarise_all(profiles.S, ~ sum(is.na(.)))
 nrow(profiles.S)
 
 # Create income brackets
-profiles.S[,IncomeBracketSmall:= case_when(Review_income=="under5000" ~"Less than 5000",
-                                           Review_income %in% c("5000","10000","15000") ~"5000",
-                                           Review_income %in% c("25000","35000") ~"25000",
-                                           Review_income %in% c("50000","80000") ~"50000",
-                                           Review_income=="above100000" ~"More than 100000")]
-profiles.S[,IncomeBracketSmall:= factor(IncomeBracketSmall,levels=c("Less than 5000","5000","25000",
-                                                                       "50000","More than 100000"))]
+profiles.S[,IncomeBracketSmall:= case_when(Review_income=="under5000" ~"$0-$5,000",
+                                           Review_income %in% c("5000","10000","15000") ~"$5,001-\n$25,000",
+                                           Review_income %in% c("25000","35000") ~"$25,001-\n$50,000",
+                                           Review_income %in% c("50000","80000") ~"$50,001-\n$100,000",
+                                           Review_income=="above100000" ~"More than\n$100,001")]
+profiles.S[,IncomeBracketSmall:= factor(IncomeBracketSmall,levels=c("$0-$5,000","5000","$5,001-\n$25,000",
+                                                                    "$25,001-\n$50,000","$50,001-\n$100,000","More than\n$100,001"))]
 
 p = profiles.S %>% 
   mutate(Review_gender = Review_gender %>% str_replace("^male","Male"))
@@ -233,7 +220,7 @@ mms = filter(profiles.S, UserID %in% UserIDs)
 # Check that each response ID has two rows
 all(count(mms,ResponseID)$n == 2)
 
-write_csv(mms,"MoralMachine/Data/6_15000SampleWithSurvey.csv")
+write_csv(mms,paste0(get_filepath("Data"),"/3_SurveySample.csv"))
 
 
 ################################################################################
@@ -297,16 +284,14 @@ GenderFreq %>%
   bind_rows(EducationFreq) %>% 
   bind_rows(IncomeFreq) %>% 
   pivot_longer(cols = c(acsFreq,mmFreq,mmsFreq)) %>%
-  mutate(
-    name = factor(name,levels=cols$var),
-    
-    ) %>% 
+  mutate(name = factor(name,levels=cols$var)) %>% 
   ggplot(aes(Level, value, fill=name)) +
   geom_col(position = position_dodge(),width=0.5) +
   facet_wrap(~ Variable, scales = "free_x",
              labeller = labeller(Variable=labell)) +
   scale_fill_manual(breaks = cols$var, values = cols$col,labels=cols$lab) +
-  labs(fill = "Dataset",x="Level of variable",y="Relative frequency") 
+  labs(fill = "Dataset",x="Level of variable",y="Relative frequency") +
+  theme(axis.text.x = element_text(size = 8.7))
 ggsave(filename=paste0(get_filepath("Figures"),"/3_DemographicDistribution.png"),width=9,height=6)
 
 
@@ -572,14 +557,13 @@ PlotAndSave = function(plotdata.main,isMainFig,filename,plotdata.util, .title = 
   annotate("text", x = "No. Characters", y = 1.2, label = "More", hjust = "right", vjust = "center", color = "black", size = 3) +
   annotate("text", x = "Species", y = -0.5, label = "Pets", hjust = "left", vjust = "center", color = "black", size = 3) +
   annotate("text", x = "Species", y = 1.2, label = "Humans", hjust = "right", vjust = "center", color = "black", size = 3) +
-  theme_bw() + 
   theme(
     axis.text.y = element_text(angle = 45, hjust = 1),
     aspect.ratio = 0.5,
     axis.title = element_text(size = 10, color="black"),
     axis.text = element_text(size = 10, color="black"),
     ) +
-    labs(subtitle = .title)
+    labs(subtitle = .title) 
   
   ggsave(paste0(filename, ".png"), plot = gg, width = 9, height = 6)
   gg
