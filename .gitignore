@@ -20,8 +20,9 @@ MoralMachine/Data/GPT4wide.zip
 MoralMachine/Data/Palm2wide.zip
 MoralMachine/Data/SharedResponsesClean.zip
 MoralMachine/Data/SharedResponsesCleanWide.zip
+MoralMachine/Data/JoinedLong.zip
+MoralMachine/Data/JoinedWide.zip
+Data/usa_00004.csv.gz
+
 LLMs_and_Social_Science240325.pdf
 
-MoralMachine/Data/JoinedLong.zip
-
-MoralMachine/Data/JoinedWide.zip
