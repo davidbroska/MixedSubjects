@@ -165,8 +165,8 @@ acsPerc %>%
   distinct(Gender,AgeBracket,IncomeBracketSmall,EducationBracket) %>% 
   nrow()
 
-# Set ideal size if all quotas could be matched
-nobs0 = 1750
+# Set sample size higher than the target of 2,000 because not all quotas will be matched exactly
+nobs0 = 2500
 
 # Get distinct combinations of categories and calculate frequencies
 mmPerc = profiles.S %>% 
@@ -181,6 +181,7 @@ mmPerc = profiles.S %>%
 nrow(acsPerc)
 nrow(mmPerc)
 
+
 # Keep only categories that are in both datasets and re-calculate the relative frequency in ACS 
 FreqMerged = mmPerc %>% 
   left_join(acsPerc,by=c("Review_gender"="Gender","Review_ageBracket"="AgeBracket",
@@ -192,15 +193,15 @@ FreqMerged = mmPerc %>%
     ExpCount = round(ACSfreqResc * nobs0), 
     # Calculate sample size within each stratum
     SampleSize = ExpCount %>% 
-      ifelse(.==0,1,.) %>% # Include at least one person from each stratum
+      ifelse(.==0,1,.) %>%     # Include at least one person from each stratum
       ifelse(. > MMn, MMn, .)  # Match expected counts as close as possible
-    )
+  )
 
 # Frequencies sum up to 1
 sum(FreqMerged$ACSfreqResc)
 
 # Get sampled user IDs
-set.seed(21042024)
+set.seed(24042024)
 UserIDs = FreqMerged %>% 
   mutate(
     UserIDs = UserIDs %>% str_split(","),
@@ -209,6 +210,8 @@ UserIDs = FreqMerged %>%
   unnest(cols=samp) %>% 
   pull(samp)
 
+# Frequencies sum up to 1
+sum(FreqMerged$ACSfreqResc)
 
 # Effective sample size 
 length(UserIDs)
@@ -279,12 +282,18 @@ cols = tribble(
 labell = c(AgeBracket="Age",EducationBracket="Education",
            Gender="Gender",IncomeBracketSmall="Income")
 
-GenderFreq %>% 
+FreqWide = GenderFreq %>% 
   bind_rows(AgeFreq) %>% 
   bind_rows(EducationFreq) %>% 
   bind_rows(IncomeFreq) %>% 
+  mutate(absDiffmm = abs(acsFreq - mmFreq),
+         absDiffmms = abs(acsFreq - mmsFreq))
+
+FreqLong = FreqWide %>% 
   pivot_longer(cols = c(acsFreq,mmFreq,mmsFreq)) %>%
-  mutate(name = factor(name,levels=cols$var)) %>% 
+  mutate(name = factor(name,levels=cols$var))
+
+FreqLong %>% 
   ggplot(aes(Level, value, fill=name)) +
   geom_col(position = position_dodge(),width=0.5) +
   facet_wrap(~ Variable, scales = "free_x",
@@ -294,10 +303,19 @@ GenderFreq %>%
   theme(axis.text.x = element_text(size = 8.7))
 ggsave(filename=paste0(get_filepath("Figures"),"/3_DemographicDistribution.png"),width=9,height=6)
 
+# Calculate mean absolute difference in percentage points
+DiffPP = FreqWide %>% 
+  group_by(Variable) %>% 
+  summarise(AvgAbsDiffMMS = mean(absDiffmms),
+            AvgAbsDiffMM = mean(absDiffmm), 
+            Improvement = AvgAbsDiffMM - AvgAbsDiffMMS)
+DiffPP
+
+# Mean improvement in matching the census quotas relative to the MM data
+mean(DiffPP$Improvement)
 
 
 # Joined -----------------------------------------------------------------------  
-
 
 # Set up
 library(tidyverse)
