@@ -111,7 +111,7 @@ profiles.S = profiles.S %>%
     !is.na(Review_income), 
     !is.na(DescriptionShown),
     !is.na(LeftHand),
-    # Awad only use overlapping cases for their analysis
+    # Awad only use overlapping cases for their analysis (see SI)
     ScenarioTypeStrict == ScenarioType) %>% 
   mutate(
     # Create education categories
@@ -308,7 +308,7 @@ DiffPP = FreqWide %>%
   group_by(Variable) %>% 
   summarise(AvgAbsDiffMMS = mean(absDiffmms),
             AvgAbsDiffMM = mean(absDiffmm), 
-            Improvement = AvgAbsDiffMM - AvgAbsDiffMMS)
+            Improvement = mean(absDiffmm - absDiffmms))
 DiffPP
 
 # Mean improvement in matching the census quotas relative to the MM data
@@ -553,7 +553,7 @@ PlotAndSave = function(plotdata.main,isMainFig,filename,plotdata.util, .title = 
   geom_text(data = plotdata.util, aes(x = Label, y = Estimates, label = Variant), hjust = 0.5, vjust = 0.5, size = 3, color = "black") +
   geom_hline(yintercept = 0, linetype="solid", color = "black", linewidth=0.4) +
   geom_point(data = plotdata.main.human, aes(x = Label, y = Estimates), color = "red", size = 3, shape = '|') +
-  scale_y_continuous(limits = c(-0.5, 1.2)) +
+  scale_y_continuous(limits = c(-0.5, 1.2),breaks = seq(0, 1, .2)) +
   xlab("") +
   ylab(expression(paste("\n",Delta,"P"))) +
   coord_flip() +
@@ -579,9 +579,9 @@ PlotAndSave = function(plotdata.main,isMainFig,filename,plotdata.util, .title = 
     axis.text.y = element_text(angle = 45, hjust = 1),
     aspect.ratio = 0.5,
     axis.title = element_text(size = 10, color="black"),
-    axis.text = element_text(size = 10, color="black"),
-    ) +
-    labs(subtitle = .title) 
+    axis.text = element_text(size = 10, color="black")) +
+    labs(subtitle = .title) +
+    theme_bw(base_line_size = 0.2)
   
   ggsave(paste0(filename, ".png"), plot = gg, width = 9, height = 6)
   gg
