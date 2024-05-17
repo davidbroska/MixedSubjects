@@ -65,10 +65,12 @@ summarize_all(acsPerc, ~ sum(is.na(.)))
 # Awad et al. (2018) -----------------------------------------------------------
 ################################################################################
 
+
 # Read data with survey responses
 profiles.S = get_filepath("SharedResponsesSurvey.csv") %>% 
   fread() %>% 
   mutate(across(Review_age, as.numeric)) 
+
 
 # A completed session is represented by at max 26 rows, and some users took the survey multiple times
 anom = profiles.S %>% 
@@ -139,7 +141,9 @@ profiles.S = profiles.S %>%
 
 # Check that there are no missings
 summarise_all(profiles.S, ~ sum(is.na(.)))
-nrow(profiles.S)
+
+# Number of rows in millions
+nrow(profiles.S) / 10^6
 
 # Create income brackets
 profiles.S[,IncomeBracketSmall:= case_when(Review_income=="under5000" ~"$0-$5,000",
@@ -150,9 +154,9 @@ profiles.S[,IncomeBracketSmall:= case_when(Review_income=="under5000" ~"$0-$5,00
 profiles.S[,IncomeBracketSmall:= factor(IncomeBracketSmall,levels=c("$0-$5,000","5000","$5,001-\n$25,000",
                                                                     "$25,001-\n$50,000","$50,001-\n$100,000","More than\n$100,001"))]
 
-p = profiles.S %>% 
-  mutate(Review_gender = Review_gender %>% str_replace("^male","Male"))
-p$Review_gender %>% unique()
+
+
+
 
 ################################################################################
 # Stratified sample ------------------------------------------------------------
@@ -218,10 +222,31 @@ length(UserIDs)
 length(unique(UserIDs))
 
 # Create moral machine sample  
-mms = filter(profiles.S, UserID %in% UserIDs)
+mms_sample = filter(profiles.S, UserID %in% UserIDs)
   
 # Check that each response ID has two rows
+all(count(mms_sample,ResponseID)$n == 2)
+
+
+
+################################################################################
+# Join columns that characterize scenario --------------------------------------
+################################################################################
+
+profiles.S.full = get_filepath("SharedResponses.csv") %>% 
+  fread() 
+
+mms = mms_sample %>% 
+  distinct(ExtendedSessionID,ResponseID,UserID,Review_gender,Review_income,IncomeBracketSmall,
+           Review_age,Review_political,Review_religious) %>% 
+  inner_join(profiles.S.full, by = join_by(ResponseID, ExtendedSessionID, UserID))
+
+
+# Check that each response ID has two rows
 all(count(mms,ResponseID)$n == 2)
+
+# Check that there are no missings
+summarize_all(mms, ~ sum(is.na(.)))
 
 write_csv(mms,paste0(get_filepath("Data"),"/3_SurveySample.csv"))
 
