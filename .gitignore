@@ -29,7 +29,9 @@ BayesRM_dfintervention_Run2.csv
 Data/usa_00004.csv.gz
 Data/SharedResponsesSurvey.csv
 
-1_DataCollection/
+1_DataCollection/supplementary_material
+1_DataCollection/llama
+1_DataCollection/__pycache__
 
 LLMs_and_Social_Science240325.pdf
 
