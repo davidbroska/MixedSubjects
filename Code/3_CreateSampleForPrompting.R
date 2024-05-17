@@ -239,7 +239,8 @@ profiles.S.full = get_filepath("SharedResponses.csv") %>%
 mms = mms_sample %>% 
   distinct(ExtendedSessionID,ResponseID,UserID,Review_gender,Review_income,IncomeBracketSmall,
            Review_age,Review_political,Review_religious) %>% 
-  inner_join(profiles.S.full, by = join_by(ResponseID, ExtendedSessionID, UserID))
+  inner_join(profiles.S.full, by = join_by(ResponseID, ExtendedSessionID, UserID)) %>% 
+  mutate(Man = as.integer(Man))
 
 
 # Check that each response ID has two rows
