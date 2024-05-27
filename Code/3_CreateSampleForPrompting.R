@@ -117,7 +117,7 @@ profiles.S = profiles.S %>%
     ScenarioTypeStrict == ScenarioType) %>% 
   mutate(
     # Create education categories
-    Review_education = case_when(
+    Review_educationBracket = case_when(
       Review_education == "underHigh" ~ "Less than high school",
       Review_education == "high" ~ "High school",
       Review_education %in% c("college","bachelor","vocational") ~ "Some college",
@@ -175,8 +175,8 @@ nobs0 = 2500
 # Get distinct combinations of categories and calculate frequencies
 mmPerc = profiles.S %>% 
   # Collect data on users that match a stratum
-  distinct(UserID,Review_gender,IncomeBracketSmall,Review_education,Review_ageBracket) %>% 
-  group_by(Review_gender,IncomeBracketSmall,Review_education,Review_ageBracket) %>% 
+  distinct(UserID,Review_gender,IncomeBracketSmall,Review_educationBracket,Review_ageBracket) %>% 
+  group_by(Review_gender,IncomeBracketSmall,Review_educationBracket,Review_ageBracket) %>% 
   summarize(UserIDs = paste0(UserID,collapse = ","), MMn=n()) %>% 
   ungroup() %>% 
   mutate(MMfreq = MMn / sum(MMn))
@@ -189,7 +189,7 @@ nrow(mmPerc)
 # Keep only categories that are in both datasets and re-calculate the relative frequency in ACS 
 FreqMerged = mmPerc %>% 
   left_join(acsPerc,by=c("Review_gender"="Gender","Review_ageBracket"="AgeBracket",
-                         "IncomeBracketSmall","Review_education"="EducationBracket")) %>% 
+                         "IncomeBracketSmall","Review_educationBracket"="EducationBracket")) %>% 
   mutate(
     # Rescale relative frequencies because some combinations were dropped in join
     ACSfreqResc = ACSfreq / sum(ACSfreq),
@@ -238,7 +238,7 @@ profiles.S.full = get_filepath("SharedResponses.csv") %>%
 
 mms = mms_sample %>% 
   distinct(ExtendedSessionID,ResponseID,UserID,Review_gender,Review_income,IncomeBracketSmall,
-           Review_age,Review_political,Review_religious) %>% 
+           Review_age,Review_ageBracket,Review_education,Review_educationBracket,Review_political,Review_religious) %>% 
   inner_join(profiles.S.full, by = join_by(ResponseID, ExtendedSessionID, UserID)) %>% 
   mutate(Man = as.integer(Man))
 
@@ -293,10 +293,9 @@ compute_dem_share = function(.acs_var,.mm_var){
 # Calculate frequencies of demographic categories for each of the three datasets
 GenderFreq = compute_dem_share(Gender,Review_gender)
 AgeFreq = compute_dem_share(AgeBracket,Review_ageBracket)
-EducationFreq = compute_dem_share(EducationBracket,Review_education) 
+EducationFreq = compute_dem_share(EducationBracket,Review_educationBracket) 
 IncomeFreq = compute_dem_share(IncomeBracketSmall,IncomeBracketSmall) 
 
-#lev = c(levels(GenderFreq$Level),levels(AgeFreq$Level),levels(EducationFreq$Level),levels(IncomeFreq$Level))
 
 cols = tribble(
   ~var,     ~col,      ~lab, 
@@ -337,7 +336,7 @@ DiffPP = FreqWide %>%
             Improvement = mean(absDiffmm - absDiffmms))
 DiffPP
 
-# Mean improvement in matching the census quotas relative to the MM data
+# Mean improvement in matching the census quotas relative to the MM data: 0.084pp
 mean(DiffPP$Improvement)
 
 
