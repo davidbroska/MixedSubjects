@@ -136,25 +136,24 @@ profiles.S = profiles.S %>%
     Review_gender = Review_gender %>% 
       str_replace("^male$","Man") %>% 
       str_replace("^female$","Woman") %>% 
-      factor(levels=c("Man","Woman"))) %>% 
+      factor(levels=c("Man","Woman")), 
+    # Create income brackets
+    IncomeBracketSmall:= case_when(
+      Review_income=="under5000" ~"$0-$5,000",
+      Review_income %in% c("5000","10000","15000") ~"$5,001-\n$25,000",
+      Review_income %in% c("25000","35000") ~"$25,001-\n$50,000",
+      Review_income %in% c("50000","80000") ~"$50,001-\n$100,000",
+      Review_income=="above100000" ~"More than\n$100,001") %>% 
+      factor(levels=c("$0-$5,000","5000","$5,001-\n$25,000","$25,001-\n$50,000",
+                      "$50,001-\n$100,000","More than\n$100,001"))) %>% 
   data.table()
+
 
 # Check that there are no missings
 summarise_all(profiles.S, ~ sum(is.na(.)))
 
 # Number of rows in millions
 nrow(profiles.S) / 10^6
-
-# Create income brackets
-profiles.S[,IncomeBracketSmall:= case_when(Review_income=="under5000" ~"$0-$5,000",
-                                           Review_income %in% c("5000","10000","15000") ~"$5,001-\n$25,000",
-                                           Review_income %in% c("25000","35000") ~"$25,001-\n$50,000",
-                                           Review_income %in% c("50000","80000") ~"$50,001-\n$100,000",
-                                           Review_income=="above100000" ~"More than\n$100,001")]
-profiles.S[,IncomeBracketSmall:= factor(IncomeBracketSmall,levels=c("$0-$5,000","5000","$5,001-\n$25,000",
-                                                                    "$25,001-\n$50,000","$50,001-\n$100,000","More than\n$100,001"))]
-
-
 
 
 
@@ -175,7 +174,8 @@ nobs0 = 2500
 # Get distinct combinations of categories and calculate frequencies
 mmPerc = profiles.S %>% 
   # Collect data on users that match a stratum
-  distinct(UserID,Review_gender,IncomeBracketSmall,Review_educationBracket,Review_ageBracket) %>% 
+  distinct(UserID,
+           Review_gender,IncomeBracketSmall,Review_educationBracket,Review_ageBracket) %>% 
   group_by(Review_gender,IncomeBracketSmall,Review_educationBracket,Review_ageBracket) %>% 
   summarize(UserIDs = paste0(UserID,collapse = ","), MMn=n()) %>% 
   ungroup() %>% 
@@ -237,11 +237,11 @@ profiles.S.full = get_filepath("SharedResponses.csv") %>%
   fread() 
 
 mms = mms_sample %>% 
-  distinct(ExtendedSessionID,ResponseID,UserID,Review_gender,Review_income,IncomeBracketSmall,
-           Review_age,Review_ageBracket,Review_education,Review_educationBracket,Review_political,Review_religious) %>% 
+  distinct(ExtendedSessionID,ResponseID,UserID,Review_gender,Review_age,Review_ageBracket,
+           Review_income,Review_ContinuousIncome,IncomeBracketSmall,
+           Review_education,Review_educationBracket,Review_political,Review_religious) %>% 
   inner_join(profiles.S.full, by = join_by(ResponseID, ExtendedSessionID, UserID)) %>% 
   mutate(Man = as.integer(Man))
-
 
 # Check that each response ID has two rows
 all(count(mms,ResponseID)$n == 2)
