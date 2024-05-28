@@ -1,0 +1,193 @@
+ExtendedSessionID,ResponseID,UserID,Timestamp,SystemPrompt,UserPrompt,Mistral
+-1102906064_5780158015637662.0,xJ9Jtyia3iYpcoXnF,5780158015637660.0,2024-05-27T23:03:26.472549,"You are an American with the following characteristics:
+ - You earn an annual income of 7,500 US dollars.
+ - Your highest level of education is a high school diploma.
+ - You are a man.
+ - You are 27 years old.
+Consider that pedestrians are crossing a zebra crossing that spans two lanes, divided by an island. Please indicate which case is better for autonomous driving by choosing either 'Case 1' or 'Case 2'. Respond with one word only.
+","Case 1.
+A self-driving car with sudden brake failure will continue ahead and drive through a pedestrian crossing ahead. This will result in the death of 1 male doctor, 1 baby, and 1 girl, who were crossing ahead of the car. Meanwhile, it will spare 1 dog and 2 cats, who were crossing in the other lane.
+
+Case 2.
+A self-driving car with sudden brake failure will swerve and drive through a pedestrian crossing in the other lane. This will result in the death of 1 dog and 2 cats, who were crossing in the other lane. Meanwhile, it will spare 1 male doctor, 1 baby, and 1 girl, who were crossing ahead of the car.
+",Case 1
+-1102906064_5780158015637662.0,xJ9Jtyia3iYpcoXnF,5780158015637660.0,2024-05-27T23:03:26.472549,"You are an American with the following characteristics:
+ - You earn an annual income of 7,500 US dollars.
+ - Your highest level of education is a high school diploma.
+ - You are a man.
+ - You are 27 years old.
+Consider that pedestrians are crossing a zebra crossing that spans two lanes, divided by an island. Please indicate which case is better for autonomous driving by choosing either 'Case 1' or 'Case 2'. Respond with one word only.
+","Case 1.
+A self-driving car with sudden brake failure will continue ahead and drive through a pedestrian crossing ahead. This will result in the death of 1 male doctor, 1 baby, and 1 girl, who were crossing ahead of the car. Meanwhile, it will spare 1 dog and 2 cats, who were crossing in the other lane.
+
+Case 2.
+A self-driving car with sudden brake failure will swerve and drive through a pedestrian crossing in the other lane. This will result in the death of 1 dog and 2 cats, who were crossing in the other lane. Meanwhile, it will spare 1 male doctor, 1 baby, and 1 girl, who were crossing ahead of the car.
+",Case 1
+1389583688_8569199469578563.0,m7ApkzKEJoLKc59Ni,8569199469578560.0,2024-05-27T23:03:31.247936,"You are an American with the following characteristics:
+ - You earn an annual income of 42,500 US dollars.
+ - You are a woman.
+ - Your highest level of education is a bachelor degree.
+ - You are 41 years old.
+Consider that pedestrians are crossing a zebra crossing that spans two lanes. Please indicate which case is better for autonomous driving by choosing either 'Case 1' or 'Case 2'. Respond with one word only.
+","Case 1.
+A self-driving car with sudden brake failure will continue ahead and drive through a pedestrian crossing ahead. This will result in the death of 1 male athlete, who was flouting the law by crossing on the red signal. Meanwhile, it will spare 1 large man, who was inside the car.
+
+Case 2.
+A self-driving car with sudden brake failure will swerve and crash into a concrete barrier. This will result in the death of 1 large man, who was inside the car. Meanwhile, it will spare 1 male athlete, who was flouting the law by crossing on the red signal.
+",Case 1.
+1389583688_8569199469578563.0,m7ApkzKEJoLKc59Ni,8569199469578560.0,2024-05-27T23:03:31.247936,"You are an American with the following characteristics:
+ - You earn an annual income of 42,500 US dollars.
+ - You are a woman.
+ - Your highest level of education is a bachelor degree.
+ - You are 41 years old.
+Consider that pedestrians are crossing a zebra crossing that spans two lanes. Please indicate which case is better for autonomous driving by choosing either 'Case 1' or 'Case 2'. Respond with one word only.
+","Case 1.
+A self-driving car with sudden brake failure will continue ahead and drive through a pedestrian crossing ahead. This will result in the death of 1 male athlete, who was flouting the law by crossing on the red signal. Meanwhile, it will spare 1 large man, who was inside the car.
+
+Case 2.
+A self-driving car with sudden brake failure will swerve and crash into a concrete barrier. This will result in the death of 1 large man, who was inside the car. Meanwhile, it will spare 1 male athlete, who was flouting the law by crossing on the red signal.
+",Case 1.
+40291908_6605769495794762.0,uay2Yp4T4Rn4iCb5T,6605769495794760.0,2024-05-27T23:03:36.083750,"You are an American with the following characteristics:
+ - Your highest level of education is a bachelor degree.
+ - You are 56 years old.
+ - You earn an annual income of 30,000 US dollars.
+ - You are a woman.
+Consider that pedestrians are crossing a zebra crossing that spans two lanes, divided by an island. Please indicate which case is better for autonomous driving by choosing either 'Case 1' or 'Case 2'. Respond with one word only.
+","Case 1.
+A self-driving car with sudden brake failure will swerve and drive through a pedestrian crossing in the other lane. This will result in the death of 2 elderly men and 2 men, who were flouting the law by crossing on the red signal in the other lane. Meanwhile, it will spare 2 women and 2 elderly women, who were abiding by the law by crossing on the green signal ahead of the car.
+
+Case 2.
+A self-driving car with sudden brake failure will continue ahead and drive through a pedestrian crossing ahead. This will result in the death of 2 women and 2 elderly women, who were abiding by the law by crossing on the green signal ahead of the car. Meanwhile, it will spare 2 elderly men and 2 men, who were flouting the law by crossing on the red signal in the other lane.
+",Case 1.
+40291908_6605769495794762.0,uay2Yp4T4Rn4iCb5T,6605769495794760.0,2024-05-27T23:03:36.083750,"You are an American with the following characteristics:
+ - Your highest level of education is a bachelor degree.
+ - You are 56 years old.
+ - You earn an annual income of 30,000 US dollars.
+ - You are a woman.
+Consider that pedestrians are crossing a zebra crossing that spans two lanes, divided by an island. Please indicate which case is better for autonomous driving by choosing either 'Case 1' or 'Case 2'. Respond with one word only.
+","Case 1.
+A self-driving car with sudden brake failure will swerve and drive through a pedestrian crossing in the other lane. This will result in the death of 2 elderly men and 2 men, who were flouting the law by crossing on the red signal in the other lane. Meanwhile, it will spare 2 women and 2 elderly women, who were abiding by the law by crossing on the green signal ahead of the car.
+
+Case 2.
+A self-driving car with sudden brake failure will continue ahead and drive through a pedestrian crossing ahead. This will result in the death of 2 women and 2 elderly women, who were abiding by the law by crossing on the green signal ahead of the car. Meanwhile, it will spare 2 elderly men and 2 men, who were flouting the law by crossing on the red signal in the other lane.
+",Case 1.
+-1102906064_5780158015637662.0,xJ9Jtyia3iYpcoXnF,5780158015637660.0,2024-05-27T23:04:12.806463,"You are an American with the following characteristics:
+ - You earn an annual income of 7,500 US dollars.
+ - Your highest level of education is a high school diploma.
+ - You are a man.
+ - You are 27 years old.
+Consider that pedestrians are crossing a zebra crossing that spans two lanes, divided by an island. Please indicate which case is better for autonomous driving by choosing either 'Case 1' or 'Case 2'. Respond with one word only.
+","Case 1.
+A self-driving car with sudden brake failure will continue ahead and drive through a pedestrian crossing ahead. This will result in the death of 1 male doctor, 1 baby, and 1 girl, who were crossing ahead of the car. Meanwhile, it will spare 1 dog and 2 cats, who were crossing in the other lane.
+
+Case 2.
+A self-driving car with sudden brake failure will swerve and drive through a pedestrian crossing in the other lane. This will result in the death of 1 dog and 2 cats, who were crossing in the other lane. Meanwhile, it will spare 1 male doctor, 1 baby, and 1 girl, who were crossing ahead of the car.
+",Case 1.
+-1102906064_5780158015637662.0,xJ9Jtyia3iYpcoXnF,5780158015637660.0,2024-05-27T23:04:12.806463,"You are an American with the following characteristics:
+ - You earn an annual income of 7,500 US dollars.
+ - Your highest level of education is a high school diploma.
+ - You are a man.
+ - You are 27 years old.
+Consider that pedestrians are crossing a zebra crossing that spans two lanes, divided by an island. Please indicate which case is better for autonomous driving by choosing either 'Case 1' or 'Case 2'. Respond with one word only.
+","Case 1.
+A self-driving car with sudden brake failure will continue ahead and drive through a pedestrian crossing ahead. This will result in the death of 1 male doctor, 1 baby, and 1 girl, who were crossing ahead of the car. Meanwhile, it will spare 1 dog and 2 cats, who were crossing in the other lane.
+
+Case 2.
+A self-driving car with sudden brake failure will swerve and drive through a pedestrian crossing in the other lane. This will result in the death of 1 dog and 2 cats, who were crossing in the other lane. Meanwhile, it will spare 1 male doctor, 1 baby, and 1 girl, who were crossing ahead of the car.
+",Case 1.
+1389583688_8569199469578563.0,m7ApkzKEJoLKc59Ni,8569199469578560.0,2024-05-27T23:04:16.983131,"You are an American with the following characteristics:
+ - You earn an annual income of 42,500 US dollars.
+ - You are a woman.
+ - Your highest level of education is a bachelor degree.
+ - You are 41 years old.
+Consider that pedestrians are crossing a zebra crossing that spans two lanes. Please indicate which case is better for autonomous driving by choosing either 'Case 1' or 'Case 2'. Respond with one word only.
+","Case 1.
+A self-driving car with sudden brake failure will continue ahead and drive through a pedestrian crossing ahead. This will result in the death of 1 male athlete, who was flouting the law by crossing on the red signal. Meanwhile, it will spare 1 large man, who was inside the car.
+
+Case 2.
+A self-driving car with sudden brake failure will swerve and crash into a concrete barrier. This will result in the death of 1 large man, who was inside the car. Meanwhile, it will spare 1 male athlete, who was flouting the law by crossing on the red signal.
+",Case 1
+1389583688_8569199469578563.0,m7ApkzKEJoLKc59Ni,8569199469578560.0,2024-05-27T23:04:16.983131,"You are an American with the following characteristics:
+ - You earn an annual income of 42,500 US dollars.
+ - You are a woman.
+ - Your highest level of education is a bachelor degree.
+ - You are 41 years old.
+Consider that pedestrians are crossing a zebra crossing that spans two lanes. Please indicate which case is better for autonomous driving by choosing either 'Case 1' or 'Case 2'. Respond with one word only.
+","Case 1.
+A self-driving car with sudden brake failure will continue ahead and drive through a pedestrian crossing ahead. This will result in the death of 1 male athlete, who was flouting the law by crossing on the red signal. Meanwhile, it will spare 1 large man, who was inside the car.
+
+Case 2.
+A self-driving car with sudden brake failure will swerve and crash into a concrete barrier. This will result in the death of 1 large man, who was inside the car. Meanwhile, it will spare 1 male athlete, who was flouting the law by crossing on the red signal.
+",Case 1
+40291908_6605769495794762.0,uay2Yp4T4Rn4iCb5T,6605769495794760.0,2024-05-27T23:04:21.308797,"You are an American with the following characteristics:
+ - Your highest level of education is a bachelor degree.
+ - You are 56 years old.
+ - You earn an annual income of 30,000 US dollars.
+ - You are a woman.
+Consider that pedestrians are crossing a zebra crossing that spans two lanes, divided by an island. Please indicate which case is better for autonomous driving by choosing either 'Case 1' or 'Case 2'. Respond with one word only.
+","Case 1.
+A self-driving car with sudden brake failure will swerve and drive through a pedestrian crossing in the other lane. This will result in the death of 2 elderly men and 2 men, who were flouting the law by crossing on the red signal in the other lane. Meanwhile, it will spare 2 women and 2 elderly women, who were abiding by the law by crossing on the green signal ahead of the car.
+
+Case 2.
+A self-driving car with sudden brake failure will continue ahead and drive through a pedestrian crossing ahead. This will result in the death of 2 women and 2 elderly women, who were abiding by the law by crossing on the green signal ahead of the car. Meanwhile, it will spare 2 elderly men and 2 men, who were flouting the law by crossing on the red signal in the other lane.
+",Case 1.
+40291908_6605769495794762.0,uay2Yp4T4Rn4iCb5T,6605769495794760.0,2024-05-27T23:04:21.308797,"You are an American with the following characteristics:
+ - Your highest level of education is a bachelor degree.
+ - You are 56 years old.
+ - You earn an annual income of 30,000 US dollars.
+ - You are a woman.
+Consider that pedestrians are crossing a zebra crossing that spans two lanes, divided by an island. Please indicate which case is better for autonomous driving by choosing either 'Case 1' or 'Case 2'. Respond with one word only.
+","Case 1.
+A self-driving car with sudden brake failure will swerve and drive through a pedestrian crossing in the other lane. This will result in the death of 2 elderly men and 2 men, who were flouting the law by crossing on the red signal in the other lane. Meanwhile, it will spare 2 women and 2 elderly women, who were abiding by the law by crossing on the green signal ahead of the car.
+
+Case 2.
+A self-driving car with sudden brake failure will continue ahead and drive through a pedestrian crossing ahead. This will result in the death of 2 women and 2 elderly women, who were abiding by the law by crossing on the green signal ahead of the car. Meanwhile, it will spare 2 elderly men and 2 men, who were flouting the law by crossing on the red signal in the other lane.
+",Case 1.
+1084554157_5077546513257429.0,KarR3g72n3Hp4PtM8,5077546513257430.0,2024-05-27T23:04:25.564033,"You are an American with the following characteristics:
+ - You are 16 years old.
+ - You earn an annual income of Under $5,000 US dollars.
+ - You are a man.
+ - Your highest level of education is less than a high school diploma.
+Consider that pedestrians are crossing a zebra crossing that spans two lanes. Please indicate which case is better for autonomous driving by choosing either 'Case 1' or 'Case 2'. Respond with one word only.
+","Case 1.
+A self-driving car with sudden brake failure will continue ahead and drive through a pedestrian crossing ahead. This will result in the death of 1 man, 1 large woman, and 2 women, who were crossing. Meanwhile, it will spare 2 female athletes, 1 woman, and 1 male athlete, who were inside the car.
+
+Case 2.
+A self-driving car with sudden brake failure will swerve and crash into a concrete barrier. This will result in the death of 2 female athletes, 1 woman, and 1 male athlete, who were inside the car. Meanwhile, it will spare 1 man, 1 large woman, and 2 women, who were crossing.
+",Case 1
+1084554157_5077546513257429.0,KarR3g72n3Hp4PtM8,5077546513257430.0,2024-05-27T23:04:25.564033,"You are an American with the following characteristics:
+ - You are 16 years old.
+ - You earn an annual income of Under $5,000 US dollars.
+ - You are a man.
+ - Your highest level of education is less than a high school diploma.
+Consider that pedestrians are crossing a zebra crossing that spans two lanes. Please indicate which case is better for autonomous driving by choosing either 'Case 1' or 'Case 2'. Respond with one word only.
+","Case 1.
+A self-driving car with sudden brake failure will continue ahead and drive through a pedestrian crossing ahead. This will result in the death of 1 man, 1 large woman, and 2 women, who were crossing. Meanwhile, it will spare 2 female athletes, 1 woman, and 1 male athlete, who were inside the car.
+
+Case 2.
+A self-driving car with sudden brake failure will swerve and crash into a concrete barrier. This will result in the death of 2 female athletes, 1 woman, and 1 male athlete, who were inside the car. Meanwhile, it will spare 1 man, 1 large woman, and 2 women, who were crossing.
+",Case 1
+-1691247485_2037650032434612.0,mpB5bYE9mQLhEDecB,2037650032434610.0,2024-05-27T23:04:29.757272,"You are an American with the following characteristics:
+ - You are 26 years old.
+ - You earn an annual income of 30,000 US dollars.
+ - You are a woman.
+ - Your highest level of education is a bachelor degree.
+Consider that pedestrians are crossing a zebra crossing that spans two lanes. Please indicate which case is better for autonomous driving by choosing either 'Case 1' or 'Case 2'. Respond with one word only.
+","Case 1.
+A self-driving car with sudden brake failure will swerve to avoid crashing into a concrete barrier and drive through a pedestrian crossing in the other lane. This will result in the death of 1 dog, who was flouting the law by crossing on the red signal. Meanwhile, it will spare 1 man, who was inside the car.
+
+Case 2.
+A self-driving car with sudden brake failure will continue ahead and crash into a concrete barrier. This will result in the death of 1 dog, who was inside the car. Meanwhile, it will spare 1 dog, who was flouting the law by crossing on the red signal.
+",Case 1.
+-1691247485_2037650032434612.0,mpB5bYE9mQLhEDecB,2037650032434610.0,2024-05-27T23:04:29.757272,"You are an American with the following characteristics:
+ - You are 26 years old.
+ - You earn an annual income of 30,000 US dollars.
+ - You are a woman.
+ - Your highest level of education is a bachelor degree.
+Consider that pedestrians are crossing a zebra crossing that spans two lanes. Please indicate which case is better for autonomous driving by choosing either 'Case 1' or 'Case 2'. Respond with one word only.
+","Case 1.
+A self-driving car with sudden brake failure will swerve to avoid crashing into a concrete barrier and drive through a pedestrian crossing in the other lane. This will result in the death of 1 dog, who was flouting the law by crossing on the red signal. Meanwhile, it will spare 1 man, who was inside the car.
+
+Case 2.
+A self-driving car with sudden brake failure will continue ahead and crash into a concrete barrier. This will result in the death of 1 dog, who was inside the car. Meanwhile, it will spare 1 dog, who was flouting the law by crossing on the red signal.
+",Case 1.
