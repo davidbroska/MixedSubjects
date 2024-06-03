@@ -72,7 +72,7 @@ profiles.S = get_filepath("SharedResponsesSurvey.csv") %>%
   mutate(across(Review_age, as.numeric)) 
 
 
-# A completed session is represented by at max 26 rows, and some users took the survey multiple times
+# A completed session is represented by at max 26 rows, and some users took the survey multiple times 
 anom = profiles.S %>% 
   count(UserID,ExtendedSessionID,sort = T) %>% 
   group_by(UserID) %>% 
@@ -137,6 +137,8 @@ profiles.S = profiles.S %>%
       str_replace("^male$","Man") %>% 
       str_replace("^female$","Woman") %>% 
       factor(levels=c("Man","Woman")), 
+    Review_political = Review_political * 100,
+    Review_religious = Review_religious * 100,
     # Create income brackets
     IncomeBracketSmall:= case_when(
       Review_income=="under5000" ~"$0-$5,000",
