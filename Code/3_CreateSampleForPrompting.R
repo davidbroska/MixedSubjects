@@ -137,8 +137,8 @@ profiles.S = profiles.S %>%
       str_replace("^male$","Man") %>% 
       str_replace("^female$","Woman") %>% 
       factor(levels=c("Man","Woman")), 
-    Review_political = Review_political * 100,
-    Review_religious = Review_religious * 100,
+    Review_political = as.integer(Review_political * 100),
+    Review_religious = as.integer(Review_religious * 100),
     # Create income brackets
     IncomeBracketSmall:= case_when(
       Review_income=="under5000" ~"$0-$5,000",
