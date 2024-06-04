@@ -2,7 +2,7 @@
 source("Code/1_Functions.R")
 
 # Load sample from moral machine data
-mms = read_csv("https://raw.githubusercontent.com/davidbroska/IntegrativeExperimentsGAI/main/Data/3_SurveySample.csv") %>% 
+mms = read_csv("https://raw.githubusercontent.com/davidbroska/IntegrativeExperimentsGAI/main/Data/2_SurveySample.csv.gz") %>% 
   mutate_all(as.character)
 
 # Load files with API output
@@ -32,4 +32,4 @@ df$weights = calcWeightsTheoretical(df)
 summarise_all(df, ~sum(is.na(.))) %>% select_if(~any(.>0))
 
 # Save file with predictions from LLMs
-write_csv(df,"Data/5_SurveySampleLLM.csv")
+write_csv(df,"Data/5_SurveySampleLLM.csv.gz")

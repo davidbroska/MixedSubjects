@@ -251,7 +251,7 @@ all(count(mms,ResponseID)$n == 2)
 # Check that there are no missings
 summarize_all(mms, ~ sum(is.na(.)))
 
-write_csv(mms,paste0(get_filepath("Data"),"/2_SurveySample.csv"))
+write_csv(mms,paste0(get_filepath("Data"),"/2_SurveySample.csv.gz"))
 
 
 ################################################################################
