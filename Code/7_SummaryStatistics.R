@@ -3,7 +3,7 @@ source("Code/1_Functions.R")
 
 # Load data
 df = read_csv("https://raw.githubusercontent.com/davidbroska/IntegrativeExperimentsGAI/main/Data/5_SurveySampleLLM.csv.gz")
-df = read_csv("Data/5_SurveySampleLLM.csv.gz")
+#df = read_csv("Data/5_SurveySampleLLM.csv.gz")
 
 # Convert from wide to long data format
 dfl = df %>% pivot_longer(cols=matches(".Saved"), values_to="ModelSaved")

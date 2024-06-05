@@ -3,10 +3,11 @@ source("Code/1_Functions.R")
 
 
 # Load survey sample data
-ds = read_csv("Data/5_SurveySampleLLM.csv.gz")
+#ds = read_csv("Data/5_SurveySampleLLM.csv.gz")
+ds = read_csv("https://raw.githubusercontent.com/davidbroska/IntegrativeExperimentsGAI/main/Data/5_SurveySampleLLM.csv.gz")
 
 # Load results from PPI analysis
-dr = read_csv("Data/6_ResultsPPI.csv.gz")
+dr = read_csv("https://raw.githubusercontent.com/davidbroska/IntegrativeExperimentsGAI/main/Data/6_ResultsPPI.csv.gz")
 
 Xs = c("Woman","Man","Boy","Girl","NumberOfCharacters")
 Ys = unique(dr$y)
