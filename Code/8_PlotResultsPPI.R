@@ -94,7 +94,7 @@ ggplot(boxp_data, aes(x=x)) +
   scale_fill_discrete(name = "Point estimates") +
   theme(legend.position = "bottom") +
   facet_wrap(~ y)
-ggsave("Figures/TruePPISimulation.png", width=7, height=6)
+ggsave("Figures/8_TruePPISimulation.png", width=7, height=6)
 
 
 
