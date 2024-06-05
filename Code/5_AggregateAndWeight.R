@@ -3,10 +3,10 @@ source("Code/1_Functions.R")
 
 # Load sample from moral machine data
 mms = read_csv("https://raw.githubusercontent.com/davidbroska/IntegrativeExperimentsGAI/main/Data/2_SurveySample.csv.gz") %>% 
-  mutate_all(as.character)
+  mutate(across(everything(), as.character))
 
 # Load files with API output
-files = c("gpt-3.5-turbo-0125_20240603.csv","gpt-4o_20240603.csv","gpt-4-turbo_20240603.csv")
+files = c("gpt-3.5-turbo-0125_20240603.csv.gz","gpt-4o_20240603.csv.gz","gpt-4-turbo_20240603.csv.gz")
 
 
 # Aggregate files
@@ -17,7 +17,7 @@ df = files %>%
     
     paste0("Data/",file) %>% 
       read_csv(show_col_types=F) %>% 
-      mutate_all(as.character) %>% 
+      mutate(across(everything(), as.character)) %>% 
       select(ExtendedSessionID:Cat, matches(".Saved"))
   
   }) %>% 

@@ -38,3 +38,4 @@ writeLines(paste0("Total cost: ", sum(c(c1,c2,c3)),"$."))
 # gpt-4-turbo: 91.05$ for API 22315 calls.
 # gpt-4o: 45.52$ for API 22315 calls.
 # Total cost: 141.12$.
+
