@@ -6,7 +6,8 @@ mms = read_csv("https://raw.githubusercontent.com/davidbroska/IntegrativeExperim
   mutate(across(everything(), as.character))
 
 # Load files with API output
-files = c("gpt-3.5-turbo-0125_20240603.csv.gz","gpt-4o_20240603.csv.gz","gpt-4-turbo_20240603.csv.gz")
+files = c("4_gpt-3.5-turbo-0125_wp_20240603.csv.gz","4_gpt-4o_wp_20240603.csv.gz","4_gpt-4-turbo_wp_20240603.csv.gz",
+          "4_gpt-3.5-turbo-0125_np_20240603.csv.gz","4_gpt-4o_np_20240603.csv.gz","4_gpt-4-turbo_np_20240603.csv.gz")
 
 
 # Aggregate files
