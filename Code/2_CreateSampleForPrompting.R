@@ -6,8 +6,8 @@ source("Code/1_Functions.R")
 ################################################################################
 
 # Read data with survey responses and apply exclusion criteria from Awad et al
-acs = fread("usa_00004.csv.gz") %>% #get_filepath("usa_00004.csv.gz") %>% 
-  #fread() %>% 
+acs = get_filepath("usa_00004.csv.gz") %>% 
+  fread() %>% 
   rename_with(~ str_remove(., "US2016C_")) %>% 
   filter(
     # Filter out Puerto Rico
@@ -23,8 +23,8 @@ acs = fread("usa_00004.csv.gz") %>% #get_filepath("usa_00004.csv.gz") %>%
       CorrPINCP>=5000 & CorrPINCP<25000 ~"$5,001-\n$25,000",
       CorrPINCP>=25000 & CorrPINCP<50000 ~"$25,001-\n$50,000",
       CorrPINCP>=50000 & CorrPINCP<100000 ~"$50,001-\n$100,000",
-      CorrPINCP>=100000 ~"More than\n$100,001") %>% 
-      factor(levels=c("$0-$5,000","$5,001-\n$25,000","$25,001-\n$50,000","$50,001-\n$100,000","More than\n$100,001")),
+      CorrPINCP>=100000 ~"More than\n$100,000") %>% 
+      factor(levels=c("$0-$5,000","$5,001-\n$25,000","$25,001-\n$50,000","$50,001-\n$100,000","More than\n$100,000")),
     
     AgeBracket = case_when(AGEP>=15 & AGEP<25 ~"15-24",
                            AGEP>=25 & AGEP<35 ~"25-34",
@@ -145,9 +145,9 @@ profiles.S = profiles.S %>%
       Review_income %in% c("5000","10000","15000") ~"$5,001-\n$25,000",
       Review_income %in% c("25000","35000") ~"$25,001-\n$50,000",
       Review_income %in% c("50000","80000") ~"$50,001-\n$100,000",
-      Review_income=="above100000" ~"More than\n$100,001") %>% 
+      Review_income=="above100000" ~"More than\n$100,000") %>% 
       factor(levels=c("$0-$5,000","5000","$5,001-\n$25,000","$25,001-\n$50,000",
-                      "$50,001-\n$100,000","More than\n$100,001"))) %>% 
+                      "$50,001-\n$100,000","More than\n$100,000"))) %>% 
   data.table()
 
 
