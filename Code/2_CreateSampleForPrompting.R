@@ -6,8 +6,8 @@ source("Code/1_Functions.R")
 ################################################################################
 
 # Read data with survey responses and apply exclusion criteria from Awad et al
-acs = get_filepath("usa_00004.csv.gz") %>% 
-  fread() %>% 
+acs = fread("usa_00004.csv.gz") %>% #get_filepath("usa_00004.csv.gz") %>% 
+  #fread() %>% 
   rename_with(~ str_remove(., "US2016C_")) %>% 
   filter(
     # Filter out Puerto Rico
@@ -328,7 +328,7 @@ FreqLong %>%
   scale_fill_manual(breaks = cols$var, values = cols$col,labels=cols$lab) +
   labs(fill = "Dataset",x="Level of variable",y="Relative frequency") +
   theme(axis.text.x = element_text(size = 8.7))
-ggsave(filename=paste0(get_filepath("Figures"),"/3_DemographicDistribution.png"),width=9,height=6)
+ggsave(filename=paste0(get_filepath("Figures"),"/2_DemographicDistribution.pdf"),width=9,height=6)
 
 # Calculate mean absolute difference in percentage points
 DiffPP = FreqWide %>% 
@@ -642,7 +642,7 @@ computeACME = function(.profiles,.depvar){
 Saved = computeACME(data.table(mms),"Saved")
 Saved
 ptitle = paste0("Human respondents (",length(unique(mms$UserID))," US respondents, ", length(unique(mms$ResponseID))," Decisions)")
-pSaved = PlotAndSave(Saved$main, T, paste0(get_filepath("Figures"),"/3_AMCE_StratifiedSample"), Saved$util,ptitle)
+pSaved = PlotAndSave(Saved$main, T, paste0(get_filepath("Figures"),"/2_AMCE_StratifiedSample"), Saved$util,ptitle)
 pSaved
 
 
