@@ -298,7 +298,7 @@ AgeFreq = compute_dem_share(AgeBracket,Review_ageBracket)
 EducationFreq = compute_dem_share(EducationBracket,Review_educationBracket) 
 IncomeFreq = compute_dem_share(IncomeBracketSmall,IncomeBracketSmall) 
 
-
+# Create bar plot
 cols = tribble(
   ~var,     ~col,      ~lab, 
   "mmsFreq",  "#DDCC77", " Stratified Moral Machine Sample ",

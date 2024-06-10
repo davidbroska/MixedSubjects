@@ -4,6 +4,10 @@ library(readr)
 library(stringr)
 library(tidyr)
 library(ggplot2)
+library(AER)
+library(sandwich)
+library(multiwayvcov)
+library(gridExtra)
 
 # default theme for ggplot2
 theme_set(theme_bw(base_family = "serif"))
@@ -23,8 +27,69 @@ get_filepath = function(.fname){
   return(filepath)
 }
 
+# Adjusted from Awad to incorporate other DVs than Saved
+GetMainEffectSizesCustom = function(profiles,savedata,r, depvar="Saved"){
+  
+  # Define dependent variable
+  profiles$dv = profiles[[depvar]]
+  
+  
+  Coeffs <- matrix(NA,r,2)
+  AttLevels <- levels(profiles$AttributeLevel)
+  lev <- levels(profiles$ScenarioType)
+  if (levels(profiles$ScenarioType)[1]=="") lev <- levels(profiles$ScenarioType)[2:8]
+  lev <- lev[c(3,2,5,1,7,6)]
+  
+  # For intervention
+  profiles$BC.weights <- calcWeightsTheoretical(profiles)
+  lm.Int <- lm(dv ~as.factor(Intervention), data=profiles, weights = BC.weights)
+  lm.Int.se <- coeftest(lm.Int, cluster.vcov(lm.Int, cluster = profiles$UserID))[,2]
+  Coeffs[1,1] <- lm.Int$coefficients[[2]]
+  Coeffs[1,2] <- lm.Int.se[[2]]
+  
+  # For relationship to vehicle 
+  ## Consider only 'no legality' (CrossingSignal==0) and 'passengers vs. pedestrians' (PedPed==0)
+  profile.Relation <- profiles[which(profiles$CrossingSignal==0 & profiles$PedPed==0),]
+  profile.Relation$BC.weights <- calcWeightsTheoretical(profile.Relation)
+  lm.Rel <- lm(dv ~as.factor(Barrier), data=profile.Relation, weights = BC.weights)
+  lm.Rel.se <- coeftest(lm.Rel, cluster.vcov(lm.Rel, cluster = profile.Relation$UserID))[,2]
+  Coeffs[2,1] <- lm.Rel$coefficients[[2]]
+  Coeffs[2,2] <- lm.Rel.se[[2]]
+  
+  # Legality 
+  ## Exclude 'no legality' (CrossingSignal!=0) and consider only 'pedestrians vs. pedestrians' (PedPed==1)
+  profile.Legality <- profiles[which(profiles$CrossingSignal!=0 & profiles$PedPed==1),]
+  profile.Legality$CrossingSignal <- factor(profile.Legality$CrossingSignal, levels=levels(profiles$CrossingSignal)[2:3])
+  profile.Legality$BC.weights <- calcWeightsTheoretical(profile.Legality)
+  lm.Leg <- lm(dv ~as.factor(CrossingSignal), data=profile.Legality, weights = BC.weights)
+  lm.Leg.se <- coeftest(lm.Leg, cluster.vcov(lm.Leg, cluster = profile.Legality$UserID))[,2]
+  Coeffs[3,1] <- lm.Leg$coefficients[[2]]
+  Coeffs[3,2] <- lm.Leg.se[[2]]
+  
+  # Six factors (gender, fitness, Social Status, age, utilitarianism, age, and species)
+  ## Extract data subsets and run regression for each
+  for(i in 1:6){
+    Temp <- profiles[which(profiles$ScenarioType==lev[i] & profiles$ScenarioTypeStrict==lev[i]),]
+    Temp$AttributeLevel <- factor(Temp$AttributeLevel, levels=AttLevels[(i*2):(i*2+1)])
+    Temp$BC.weights <- calcWeightsTheoretical(Temp)    
+    lm.Temp <- lm(dv ~ as.factor(AttributeLevel), data=Temp, weights = BC.weights)
+    lm.Temp.se <- coeftest(lm.Temp, cluster.vcov(lm.Temp, cluster = Temp$UserID))[,2]
+    Coeffs[i+3,1] <- lm.Temp$coefficients[[2]]
+    Coeffs[i+3,2] <- lm.Temp.se[[2]]
+    
+    # Save to a data frame
+    if(savedata){
+      var.name <- paste("profile",gsub(" ","",lev[i]),sep=".")
+      assign(var.name,Temp)
+    }
+  }
+  return(Coeffs)
+}
+
 
 # Functions by Awad et al. (2018) -----------------------------------------------------------
+# https://osf.io/xzvm4
+
 PreprocessProfiles <- function(profiles){
   profiles[,Saved := as.numeric(Saved)]
   profiles[,ScenarioType := as.factor(ScenarioType)]
@@ -151,8 +216,8 @@ GetMainEffectSizes <- function(profiles,savedata,r){
 GetPlotData <- function(Coeffs,isMainFig,r){
   # Convert to dataframe and add labels
   plotdata <- as.data.frame(Coeffs)
-  colnames(plotdata)=c("Estimates","se")
-  plotdata$Label <- c("Preference for action -> \n Preference for inaction",
+  colnames(plotdata)=c("amce","se")
+  plotdata$label <- c("Preference for action -> \n Preference for inaction",
                       "Sparing Passengers -> \n Sparing Pedestrians",
                       "Sparing the Unlawful -> \n Sparing the Lawful",
                       "Sparing Males -> \n Sparing Females",
@@ -162,7 +227,7 @@ GetPlotData <- function(Coeffs,isMainFig,r){
                       "Sparing Fewer Characters -> \n Sparing More Characters",
                       "Sparing Pets -> \n Sparing Humans") 
   if(isMainFig)
-    plotdata$Label <- c("Intervention",
+    plotdata$label <- c("Intervention",
                         "Relation to AV",
                         "Law",
                         "Gender",
@@ -173,10 +238,10 @@ GetPlotData <- function(Coeffs,isMainFig,r){
                         "Species") 
   
   
-  plotdata$Label <- factor(plotdata$Label,as.ordered(plotdata$Label[match(sort(plotdata$Estimates[1:r]),plotdata$Estimates[1:r])]))
-  plotdata$Label <- factor(plotdata$Label,levels = rev(levels(plotdata$Label)))
+  plotdata$label <- factor(plotdata$label,as.ordered(plotdata$label[match(sort(plotdata$amce[1:r]),plotdata$amce[1:r])]))
+  plotdata$label <- factor(plotdata$label,levels = rev(levels(plotdata$label)))
   
-  plotdata$Estimates <- as.numeric(as.character(plotdata$Estimates))
+  plotdata$amce <- as.numeric(as.character(plotdata$amce))
   plotdata$se <- as.numeric(as.character(plotdata$se))
   
   return(plotdata)
@@ -201,7 +266,7 @@ GetMainEffectSizes.Util <- function(profiles){
 
 GetPlotData.Util <- function(Coeffs){
   plotdata <- as.data.frame(Coeffs)
-  colnames(plotdata)=c("Estimates","se")
+  colnames(plotdata)=c("amce","se")
   plotdata$Variant <- c(1:4)
   plotdata$Variant <- factor(plotdata$Variant,levels=rev(plotdata$Variant))
   plotdata$Label <- as.factor(rep("No. Characters",4))
@@ -214,13 +279,13 @@ PlotAndSave <- function(plotdata.main,isMainFig,filename,plotdata.Util){
     util.x <- which(order(plotdata.main$Label)==8)+0.2
     alphas <- rep(.7,9)
     alphas[which(order(plotdata.main$Label)==8)] <- 0
-    gg <- ggplot(plotdata.main,aes(x=Label, y=Estimates))+
+    gg <- ggplot(plotdata.main,aes(x=Label, y=amce))+
       geom_hline(yintercept=0, color="black", size=0.7)+
       geom_col(width = .5, fill = "#0077ad", alpha = alphas)+
-      geom_col(data = plotdata.util, width = .5, fill = "#0077ad", alpha = .7,aes(y=max(Estimates)))+
+      geom_col(data = plotdata.util, width = .5, fill = "#0077ad", alpha = .7,aes(y=max(amce)))+
       geom_point(data = plotdata.util, color = "#49c6ff" , size = 5.5, shape = 21, fill = "white", stroke = 2)+  
       geom_point(size = 5.5, shape = 21, color = "#0077ad", fill = "white", stroke = 2)+
-      geom_text(data=plotdata.util, aes(label=as.character(c(1:4)),y=Estimates),size=3,color="#37a2ef")+
+      geom_text(data=plotdata.util, aes(label=as.character(c(1:4)),y=amce),size=3,color="#37a2ef")+
       coord_flip()+
       labs(title="Preference in favor of the choice on the right side")+
       xlab("")+
@@ -239,9 +304,9 @@ PlotAndSave <- function(plotdata.main,isMainFig,filename,plotdata.Util){
     ggsave(file=paste0(filename,".pdf"), width = 12, height = 6)
   }
   else{ 
-    gg <- ggplot(plotdata.main,aes(Label, Estimates))+
+    gg <- ggplot(plotdata.main,aes(Label, amce))+
       geom_hline(yintercept=0, color="black", size=0.7)+
-      geom_crossbar(aes(ymin = Estimates - 1.96*se, ymax=Estimates + 1.96*se), 
+      geom_crossbar(aes(ymin = amce - 1.96*se, ymax=amce + 1.96*se), 
                     position=position_dodge(.9), size=0.7, fill="blue",
                     fatten=1.5, width=.8)+
       coord_flip()+
@@ -304,7 +369,7 @@ GetMainEffectSizes.Characters <- function(profiles,charType,k){
 GetPlotData.Characters <- function(Coeffs,charType,k){
   plotdata <- as.data.frame(Coeffs)
   colnames(plotdata)=characters.all[charType][[1]]
-  plotdata$Measure <- rep(c("Estimates","se"),each=k)
+  plotdata$Measure <- rep(c("amce","se"),each=k)
   plotdata$`No. of Characters` <- rep(1:k,times=2)
   plotdata <- plotdata %>% 
     gather(CharacterType, Value, -Measure, -`No. of Characters`) %>%
@@ -312,7 +377,7 @@ GetPlotData.Characters <- function(Coeffs,charType,k){
   plotdata$`No. of Characters` <- as.factor(plotdata$`No. of Characters`)
   plotdata$CharacterType <- factor(plotdata$CharacterType, 
                                    levels=unique(plotdata$CharacterType[
-                                     order(plotdata$Estimates[
+                                     order(plotdata$amce[
                                        which(plotdata$`No. of Characters`==1)])]))
   return(plotdata)
 }
@@ -323,7 +388,7 @@ PlotAndSave.Characters <- function(plotdata,charType,isMainFig,filename){
     plotdata[nrow(plotdata) + c(1:unique(plotdata$`No. of Characters`)), 
              "No. of Characters"] <- unique(plotdata$`No. of Characters`)
     
-    gg <- ggplot(plotdata,aes(CharacterType, Estimates,color=Estimates>0,fill=Estimates>0))+
+    gg <- ggplot(plotdata,aes(CharacterType, amce,color=amce>0,fill=amce>0))+
       geom_hline(yintercept=0, color="black", size=0.7)+
       geom_col(width = .5, alpha = 0.7)+
       geom_point(size = 5, shape = 21, fill = "white", stroke = 2)+
@@ -343,9 +408,9 @@ PlotAndSave.Characters <- function(plotdata,charType,isMainFig,filename){
     ggsave(file=paste0(filename,charType,".pdf"), width = 9, height = 9)
     
   } else{
-    gg <- ggplot(plotdata,aes(CharacterType, Estimates,color=`No. of Characters`, fill=`No. of Characters`))+
+    gg <- ggplot(plotdata,aes(CharacterType, amce,color=`No. of Characters`, fill=`No. of Characters`))+
       geom_hline(yintercept=0, color="black", size=0.7)+
-      geom_crossbar(aes(ymin = Estimates - 1.96*se, ymax=Estimates + 1.96*se), 
+      geom_crossbar(aes(ymin = amce - 1.96*se, ymax=amce + 1.96*se), 
                     position=position_dodge(.9), size=0.7, alpha=.4,
                     fatten=1.5, width=.8, fill="white",color="#0077cc")+
       theme_bw()+ coord_flip()+
@@ -448,7 +513,7 @@ GetPlotData.Inter.Attr <- function(Coeffs,isMainFig,r,Attr){
   k <- 2
   if(Attr=="CrossingSignal") k=3
   plotdata <- as.data.frame(Coeffs)
-  colnames(plotdata)=rep(c("Estimates","se"))
+  colnames(plotdata)=rep(c("amce","se"))
   # plotdata$Label <- rep(c(attrSI[Attr][[1]],
   #                         "Gender [Male -> Female]",
   #                         "Fitness [Large -> Fit]",
@@ -479,10 +544,10 @@ GetPlotData.Inter.Attr <- function(Coeffs,isMainFig,r,Attr){
   if(Attr=="CrossingSignal")
     plotdata$Attribute <- rep(c("No Legality", "Legal Crossing", "Ilegal Crossing"),each=r)
   
-  plotdata$Label <- factor(plotdata$Label,as.ordered(plotdata$Label[match(sort(plotdata$Estimates[1:r]),plotdata$Estimates[1:r])]))
+  plotdata$Label <- factor(plotdata$Label,as.ordered(plotdata$Label[match(sort(plotdata$amce[1:r]),plotdata$amce[1:r])]))
   plotdata$Label <- factor(plotdata$Label,levels = rev(levels(plotdata$Label)))
   
-  plotdata$Estimates <- as.numeric(as.character(plotdata$Estimates))
+  plotdata$amce <- as.numeric(as.character(plotdata$amce))
   plotdata$se <- as.numeric(as.character(plotdata$se))
   
   return(plotdata)
@@ -491,9 +556,9 @@ GetPlotData.Inter.Attr <- function(Coeffs,isMainFig,r,Attr){
 
 
 PlotAndSave.Split <- function(plotdata,AttrLabel,isMainFig,filename){
-  gg <- ggplot(plotdata,aes(Label, Estimates, color=Attribute))+
+  gg <- ggplot(plotdata,aes(Label, amce, color=Attribute))+
     geom_hline(yintercept=0, color="black", size=0.7)+
-    geom_crossbar(aes(ymin = Estimates - 1.96*se, ymax=Estimates + 1.96*se), 
+    geom_crossbar(aes(ymin = amce - 1.96*se, ymax=amce + 1.96*se), 
                   position=position_dodge(.9), size=0.7, 
                   fatten=1.5, width=.8)+
     coord_flip()+
@@ -648,7 +713,7 @@ GetFinalDF <- function(Coeffs,vals){
             "No. Characters [Less -> More]",
             "Species [Pets -> Humans]")
   
-  colnames(plotdata)=paste0("", levels(interaction(rep(factor(facs,levels = ordered(facs)),2),rep(c("Estimates","se"),each=9), sep = ": ")))
+  colnames(plotdata)=paste0("", levels(interaction(rep(factor(facs,levels = ordered(facs)),2),rep(c("amce","se"),each=9), sep = ": ")))
   return(plotdata)
   
 }
@@ -664,18 +729,18 @@ GetPlotData.Inter.Others <- function(Coeffs,vals,isMainFig,fixedOrder){
             "Sparing the younger\n [Age]",
             "Sparing more characters\n [No. Characters]",
             "Sparing humans\n [Species]") 
-  colnames(plotdata)=paste0("", levels(interaction(rep(factor(facs,levels = ordered(facs)),2),rep(c("Estimates","se"),each=9), sep = ":")))
+  colnames(plotdata)=paste0("", levels(interaction(rep(factor(facs,levels = ordered(facs)),2),rep(c("amce","se"),each=9), sep = ":")))
   plotdata$Attribute <- as.character(vals)
   plotdata <- plotdata %>% gather(key, value, -grep(':',names(plotdata),invert = T))
   plotdata <- plotdata %>%  extract(key, c("Label", "Measure"), "([a-zA-Z\\W]+):([a-zA-Z.]+)")
   plotdata <- plotdata %>% spread(Measure, value)
   
   if(fixedOrder) plotdata$Label <- factor(plotdata$Label,as.ordered(facs))
-  else plotdata$Label <- factor(plotdata$Label,as.ordered(plotdata$Label[match(sort(plotdata$Estimates[1:r]),plotdata$Estimates[1:r])]))
+  else plotdata$Label <- factor(plotdata$Label,as.ordered(plotdata$Label[match(sort(plotdata$amce[1:r]),plotdata$amce[1:r])]))
   
   plotdata$Label <- factor(plotdata$Label,levels = rev(levels(plotdata$Label)))
   
-  plotdata$Estimates <- as.numeric(as.character(plotdata$Estimates))
+  plotdata$amce <- as.numeric(as.character(plotdata$amce))
   plotdata$se <- as.numeric(as.character(plotdata$se))
   
   return(plotdata)
@@ -684,9 +749,9 @@ GetPlotData.Inter.Others <- function(Coeffs,vals,isMainFig,fixedOrder){
 
 
 PlotAndSave.Split.Order <- function(plotdata,AttrLabel,isMainFig,filename){
-  gg <- ggplot(plotdata,aes(Attribute, Estimates))+
+  gg <- ggplot(plotdata,aes(Attribute, amce))+
     geom_hline(yintercept=0, color="black", size=0.7)+
-    geom_crossbar(aes(ymin = Estimates - 1.96*se, ymax=Estimates + 1.96*se), 
+    geom_crossbar(aes(ymin = amce - 1.96*se, ymax=amce + 1.96*se), 
                   position=position_dodge(.9), size=0.7, 
                   fatten=1.5, width=.8,color="black")+
     coord_flip()+
@@ -881,75 +946,3 @@ GetMainEffectSizesActualWeights <- function(profiles,savedata,r){
   }
   return(Coeffs)
 }
-
-# New functions -- Revise and resubmit
-PreferredLevel <- list(Age = "Young",
-                       Fitness = "Fit",
-                       `Social Status` = "High",
-                       Species = "Hoomans",
-                       Gender = "Female",
-                       Utilitarian = "More",
-                       Random = "Rand")
-
-NonPreferredLevel <- list(Age = "Old",
-                          Fitness = "Fat",
-                          `Social Status` = "Low",
-                          Species = "Pets",
-                          Gender = "Male",
-                          Utilitarian = "Less",
-                          Random = "Rand")
-
-PreferredLevelF <- function(sType){
-  return(as.character(unlist(PreferredLevel[sType])))
-}
-
-
-RecodeColumns <- function(profiles){
-  profiles[,PreferredCol:= PreferredLevelF(as.character(ScenarioType))]
-  profiles[,PreferredIsChosen:= ifelse(!xor(AttributeLevel==PreferredCol,Saved),TRUE,FALSE)]
-  profiles[,StayIsChosen:= ifelse(!xor(Intervention==0,Saved),TRUE,FALSE)]
-  profiles[,PedestriansIsChosen:= ifelse(!xor(Barrier==0,Saved),TRUE,FALSE)]
-  profiles[,LegalIsChosen:= ifelse(!xor(CrossingSignal==1,Saved),TRUE,FALSE)]
-  return(profiles)
-}
-
-# Prepare demographic columns
-PrepareDemColumns <- function(profiles){
-  profiles[,Review_gender:=gsub("default",NA,Review_gender)]
-  profiles[,Review_gender:=gsub("others",NA,Review_gender)]
-  profiles[,Review_gender:= factor(Review_gender,levels=c("female","male"))]
-  
-  profiles[,Review_income:=gsub("default",NA,Review_income)]
-  profiles[,Review_income:=gsub("over10000","above100000",Review_income)]
-  profiles[,Review_income:= factor(Review_income,levels=c("under5000","5000","10000","15000","25000",
-                                                          "35000","50000","80000","above100000"))]
-  profiles[,Review_ContinuousIncome:= case_when(Review_income == "under5000"~ 2500,
-                                                Review_income == "5000"~7500,
-                                                Review_income == "10000"~12500,
-                                                Review_income == "15000"~20000,
-                                                Review_income == "25000"~30000,
-                                                Review_income == "35000"~42500,
-                                                Review_income == "50000"~65000,
-                                                Review_income == "80000"~90000,
-                                                Review_income == "above100000"~150000)]
-  profiles[,Review_ContinuousIncome.z:=as.numeric(scale(Review_ContinuousIncome))]
-  
-  profiles[,Review_education:=gsub("default",NA,Review_education)]
-  profiles[,Review_education:= factor(Review_education,levels=c("underHigh","high","vocational","college",
-                                                                "bachelor","graduate","others"))]
-  profiles[,Review_CollegeEducated:= ifelse(Review_education=="others",NA,
-                                            ifelse(Review_education %in% c("college","bachelor","graduate"),1,0))]
-  
-  
-  profiles[,Review_age:=ifelse(Review_age>15 & Review_age<75,Review_age,NA)]
-  profiles[,Review_age.z:=as.numeric(scale(Review_age))]
-  
-  profiles[,Review_political.z:=as.numeric(scale(Review_political))]
-  
-  profiles[,Review_religious.z:=as.numeric(scale(Review_religious))]
-  
-  return(profiles)
-}
-
-
-
