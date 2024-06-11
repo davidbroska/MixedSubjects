@@ -228,13 +228,13 @@ GetPlotData <- function(Coeffs,isMainFig,r){
                       "Sparing Pets -> \n Sparing Humans") 
   if(isMainFig)
     plotdata$label <- c("Intervention",
-                        "Relation to AV",
-                        "Law",
+                        "Barrier",
+                        "CrossingSignal",
                         "Gender",
                         "Fitness",
                         "Social Status",
                         "Age",
-                        "No. Characters",
+                        "Utilitarian",
                         "Species") 
   
   

@@ -49,13 +49,13 @@ main.gpt35turbo0125_wp_Saved = calculate_amce(mms,"gpt35turbo0125_wp_Saved")
 main.Awad2018 = tribble(
   ~amce, ~label,
   0.061, "Intervention",
-  0.097, "Relation to AV",
-  0.353, "Law",
+  0.097, "Barrier",
+  0.353, "CrossingSignal",
   0.119, "Gender",
   0.160, "Fitness",
   0.345, "Social Status",
   0.497, "Age",
-  0.651, "No. Characters",
+  0.651, "Utilitarian",
   0.585, "Species") %>% 
   mutate(dv="Awad2018")
 
@@ -115,30 +115,38 @@ dfsim_w = dfsim %>%
             mean_width_ppi_ci = mean(width_ppi_ci,na.rm=T), 
             mean_width_pooled_ci = mean(width_pooled_ci,na.rm=T))
 
-# plot confidence interval width for increasing N
-p1 = dfsim_w %>% 
-  pivot_longer(cols = c(mean_width_ppi_ci,mean_width_pooled_ci),values_to="width",names_to="method") %>% 
-  mutate(method = str_extract(method,"ppi|pooled")) %>% 
-  ggplot(aes(N,width,color=method,fill=y,linetype=y)) + 
-  geom_line() +
-  facet_grid(~ n,labeller=labeller(n=function(lab) paste0("n=",lab))) +
-  labs(color="Method", linetype="Language Model", 
-       color="Method", y="95% CI width", x="N")
+plot_results = function(.predictor){
+  
+  # plot confidence interval width for increasing N
+  p1 = dfsim_w %>% 
+    filter(x==.predictor) %>% 
+    pivot_longer(cols = c(mean_width_ppi_ci,mean_width_pooled_ci),values_to="width",names_to="method") %>% 
+    mutate(method = str_extract(method,"ppi|pooled")) %>% 
+    ggplot(aes(N,width,color=method,fill=y,linetype=y)) + 
+    geom_line() +
+    facet_grid(~ n,labeller=labeller(n=function(lab) paste0("n=",lab))) +
+    labs(color="Method", linetype="Language Model", 
+         color="Method", y="95% CI width", x="N")
+  
+  # plot percentage of time CIs cover best parameter estimate for increasing N
+  p2 = dfsim_w %>% 
+    filter(x== .predictor) %>% 
+    pivot_longer(cols = c(coverage_ppi,coverage_pooled),values_to="coverage",names_to="method") %>% 
+    mutate(method = str_extract(method,"ppi|pooled")) %>% 
+    ggplot(aes(N,coverage,color=method,fill=y,linetype=y)) + 
+    geom_line() +
+    scale_y_continuous(limits = c(0,100)) + 
+    facet_grid(~ n,labeller=labeller(n=function(lab) paste0("n=",lab))) +
+    labs(color="Method", linetype="Language Model", 
+         y="Coverage in %", x="N\n(Number of LLM predictions)")
+  
+  ggpubr::ggarrange(p1,p2,nrow=2,common.legend = T,legend = "right")
+  ggsave(paste0("Figures/7_SimulationResults_", .predictor,".pdf"),width=7,height=6)
 
-# plot percentage of time CIs cover best parameter estimate for increasing N
-p2 = dfsim_w %>% 
-  pivot_longer(cols = c(coverage_ppi,coverage_pooled),values_to="coverage",names_to="method") %>% 
-  mutate(method = str_extract(method,"ppi|pooled")) %>% 
-  ggplot(aes(N,coverage,color=method,fill=y,linetype=y)) + 
-  geom_line() +
-  scale_y_continuous(limits = c(0,100)) + 
-  facet_grid(~ n,labeller=labeller(n=function(lab) paste0("n=",lab))) +
-  labs(color="Method", linetype="Language Model", 
-       y="Coverage in %", x="N\n(Number of LLM predictions)")
+}
 
-ggpubr::ggarrange(p1,p2,nrow=2,common.legend = T,legend = "right")
-ggsave("Figures/7_SimulationResults.pdf",width=7,height=6)
-
-
+Xs = unique(dfsim$x)
+for (i in seq_along(Xs)) plot_results(.predictor = Xs[i])
+  
 
 

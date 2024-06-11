@@ -81,20 +81,17 @@ find_mode = function(data, vars){
 
 gpt35turbo0125_wp_reps = c("gpt35turbo0125_wp_Saved", "gpt35turbo0125_wp_Saved_2", "gpt35turbo0125_wp_Saved_3")
 gpt4turbo_wp_reps = c("gpt4turbo_wp_Saved", "gpt4turbo_wp_Saved_2", "gpt4turbo_wp_Saved_3")
+gpt4o_wp_reps = c("gpt4o_wp_Saved", "gpt4o_wp_Saved_2", "gpt4o_wp_Saved_3")
 
+# find modal prediction
 df$gpt35turbo0125_wp_Saved_mode = find_mode(df, gpt35turbo0125_wp_reps)
 df$gpt4turbo_wp_Saved_mode = find_mode(df, gpt4turbo_wp_reps)
+df$gpt4o_wp_Saved_mode = find_mode(df, gpt4o_wp_reps)
 
 # verify
-df %>% 
-  select(all_of(c(gpt35turbo0125_wp_reps,"gpt35turbo0125_wp_Saved_mode"))) %>% 
-  head()
-df %>% 
-  select(all_of(c(gpt4turbo_wp_reps,"gpt4turbo_wp_Saved_mode"))) %>% 
-  head()
-
-# Calculate weights for conjoint analysis 
-df$weights = calcWeightsTheoretical(df)
+df %>% select(all_of(c(gpt35turbo0125_wp_reps,"gpt35turbo0125_wp_Saved_mode"))) %>% head()
+df %>% select(all_of(c(gpt4turbo_wp_reps,"gpt4turbo_wp_Saved_mode"))) %>% head()
+df %>% select(all_of(c(gpt4o_wp_reps,"gpt4o_wp_Saved_mode"))) %>% head()
 
 # Check for NA values
 summarize(df,across(matches("wp_Saved"), ~sum(is.na(.))))

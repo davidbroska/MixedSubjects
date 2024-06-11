@@ -19,6 +19,12 @@ df %>%
             n_NAs = sum(is.na(ModelSaved)))
 
 
+# correlations of observed and predicted outcomes
+round(cor(df[,c("Saved","gpt4turbo_wp_Saved","gpt4o_wp_Saved","gpt35turbo0125_wp_Saved")],use="complete.obs"),4)
+
+# correlations of observed with modal prediction 
+round(cor(df[,c("Saved","gpt4turbo_wp_Saved_mode","gpt4o_wp_Saved_mode","gpt35turbo0125_wp_Saved_mode")],use="complete.obs"),4)
+
 reps = c("gpt4turbo_wp_Saved","gpt4turbo_wp_Saved_2","gpt4turbo_wp_Saved_3","gpt4turbo_wp_Saved_mode",
          "gpt35turbo0125_wp_Saved","gpt35turbo0125_wp_Saved_2","gpt35turbo0125_wp_Saved_3","gpt35turbo0125_wp_Saved_mode")
 round(cor(df[,c("Saved",reps)],use = "complete.obs"),4)

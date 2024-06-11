@@ -18,7 +18,7 @@ To simulate reponses with the provided code, follow these steps:
 
 `4_PromptLLM.ipynb`:This Python notebook creates prompts to the language models and sends API requests.
 
-`5_AggregateAndWeight.R`: This R script aggregates the output from the API requests and calculates the weights necessary to calculate the Average Marginal Component Effect (AMCE).
+`5_AggregateData.R`: This R script aggregates the output from the API requests.
 
 `6_AnalysisPPI.ipynb`: This Python notebook computes the point estimates and confidence intervals with PPI and conventional inference.
 
