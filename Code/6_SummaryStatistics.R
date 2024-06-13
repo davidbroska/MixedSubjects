@@ -1,5 +1,6 @@
 # Load packages and custom functions
 source("Code/1_Functions.R")
+library(kableExtra)
 
 # Load data
 df = read_csv("Data/5_SurveySampleLLM.csv.gz")
@@ -11,12 +12,32 @@ df = read_csv("Data/5_SurveySampleLLM.csv.gz")
 ####################
 
 # Correlation between predicted and observed responses
-df %>%
+corr_tab = df %>%
   pivot_longer(cols=matches(".Saved"), values_to="ModelSaved") %>% 
   group_by(name) %>% 
   summarize(correlation = cor(Saved,ModelSaved,use = "complete.obs"), 
-            n_prompts = length(unique(ResponseID)), 
-            n_NAs = sum(is.na(ModelSaved)))
+            N = sum(!is.na(ModelSaved))/2) %>% 
+  mutate(Model = str_remove(name,"_.+"), 
+         Type = case_when(
+           str_detect(name, "wp_Saved_[2-3]|wp_Saved$") ~ "Replicate", 
+           str_detect(name, "np_Saved") ~ "Without persona",
+           str_detect(name, "_mode") ~ "Mode across replicates")) %>% 
+  select(Model, Type, Correlation = correlation, N) %>% 
+  arrange(desc(Model), Type, desc(N))  
+
+
+
+caption = paste0(
+  "Correlation of survey respondents' evaluation of a moral dilemma with the LLM prediction. ",
+  "In addition to the 22,315 predictions, we assess how the correlation varies by prompting the LLM to give 5,000 additional predictions. ",
+  "We form a composite from the modal prediction of three identical prompts. For a separate set of predictions, we omit the demographic persona from the prompt.",
+)
+kable(corr_tab, format = "latex",digits = 3, label = "corr-tab",booktabs=T, align = c("l","l","c","c"),
+      caption = caption) %>% 
+  collapse_rows(columns = 1) %>% 
+  kable_styling(latex_options = "hold_position") %>% 
+  writeLines(con="Figures/6_CorrelationTable.tex")
+
 
 
 # correlations of observed and predicted outcomes
