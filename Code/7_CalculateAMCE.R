@@ -1,6 +1,71 @@
 source("Code/1_Functions.R")
 
 
+#################################
+# Calculate theoretical PPI width
+#################################
+
+p_of_classic_ci_ratio = function(rho, k) {
+  # Define k as the ratio k = N/n
+  # Then N/(N+n) = k/(1+k)
+  
+  # Ratio of PPI CI width to classical CI width 
+  sqrt(1 - (k / (1+k)) * rho^2)
+  
+}
+plotdata = expand.grid(rho = c(0.25, 0.5, 0.75), k = seq(0, 5, by=0.1)) %>% 
+  mutate(p_of_classic_ci = p_of_classic_ci_ratio(rho=rho, k=k))
+
+# Example 
+example_ratio =  round(100 * p_of_classic_ci_ratio(rho=0.75, k=4), 1)
+100 - example_ratio
+
+
+ggplot(plotdata, aes(x = k, y = p_of_classic_ci, color = factor(rho))) +
+  geom_line(linewidth=1) +
+  labs(
+    x = "Ratio of number of predictions to total sample size N/n",
+    y = "Ratio of PPI CI width to classical CI width",
+    color = bquote(tilde(rho))
+  ) +
+  scale_y_continuous(breaks = seq(0,1, by=0.05)) +
+  scale_color_manual(breaks = c(0.25,0.5,0.75), values = c("#CC6677","#DDCC77","#4477AA")) +
+  theme(legend.position = "bottom", text=element_text(size=12))
+ggsave("Figures/7_WidthAsShareOfClassicCIWidth_ratio.pdf", width = 5, height=4.5)
+
+
+# Define function to calculate proportion of classic CI width
+p_of_classic_ci_nN = function(rho, n, N) {
+  
+  sqrt(1 - ((N / (N + n)) * rho^2))
+  
+}
+
+# Set parameter values
+rho_values = c(0.25, 0.5, 0.75)
+n_values = c(50, 500, 1000)
+N_values = seq(10, 2000, by=10)
+
+# Create a data frame to hold all combinations of rho, n, and N
+plotdata = expand.grid(rho = rho_values, n = n_values, N = N_values) %>%
+  mutate(p_of_classic_ci = p_of_classic_ci_nN(rho, n, N))
+
+ggplot(plotdata, aes(x = N, y = p_of_classic_ci, color = factor(rho))) +
+  geom_line(linewidth=1) +
+  facet_wrap(~n, labeller = as_labeller(function(l) paste0("n=",l))) +
+  labs(
+    x = "Number of predictions N",
+    y = "Ratio of PPI CI width to classical CI width",
+    color = bquote(tilde(rho))
+  ) +
+  scale_y_continuous(breaks = seq(0,1, by=0.05)) +
+  scale_color_manual(breaks = c(0.25,0.5,0.75), values = c("#CC6677","#DDCC77","#4477AA")) +
+  theme(legend.position = "bottom", text=element_text(size=12))
+ggsave("Figures/7_WidthAsShareOfClassicCIWidth_absolute.pdf", width=6,height= 4.25)
+
+
+
+
 ##############################################
 # Calculate AMCE for human and LLM predictions
 ##############################################
@@ -95,14 +160,14 @@ ggsave(filename="Figures/7_AMCEs.pdf",width=7,height=5)
 # Compare AMCE estimate from PPI
 ################################
 
-
 # Load PPI estimates
 dfsim = read_csv("Data/6_ResultsPPI.csv.gz") %>% 
   left_join(main.Saved, by=c("x"="label")) %>% 
   mutate(param_in_ppi_ci    = ifelse(amce >= conf_low_ppi & amce <= conf_high_ppi, 1, 0),
-         param_in_pooled_ci = ifelse(amce >= conf_low_pooled & amce <= conf_high_pooled, 1, 0), 
-         width_ppi_ci = conf_high_ppi - conf_low_ppi, 
-         width_pooled_ci = conf_high_pooled - conf_low_pooled)
+         param_in_pooled_ci = ifelse(amce >= conf_low_pooled & amce <= conf_high_pooled, 1, 0),
+         width_ppi_ci = conf_high_ppi - conf_low_ppi,
+         width_pooled_ci = conf_high_pooled - conf_low_pooled, 
+         width_ols_ci = conf_high_ols - conf_low_ols)
 
 # NA values
 summarise(dfsim, across(everything(), ~ sum(is.na(.))))
@@ -113,40 +178,131 @@ dfsim_w = dfsim %>%
   summarize(coverage_ppi = 100 * (sum(param_in_ppi_ci == 1) / sum(param_in_ppi_ci %in% 0:1)),
             coverage_pooled = 100 * (sum(param_in_pooled_ci == 1) / sum(param_in_pooled_ci %in% 0:1)),
             mean_width_ppi_ci = mean(width_ppi_ci,na.rm=T), 
-            mean_width_pooled_ci = mean(width_pooled_ci,na.rm=T))
+            mean_width_pooled_ci = mean(width_pooled_ci,na.rm=T), 
+            mean_width_ols_ci = mean(width_pooled_ci,na.rm=T), 
+            mean_width_ols_ci = mean(width_ols_ci, na.rm=T)) %>% 
+  mutate(ratio_ols_ppi_ci =  mean_width_ppi_ci / mean_width_ols_ci, 
+         ratio_N_n = N/n)
 
-plot_results = function(.predictor){
+plot_results = function(.predictors, .ns, .Nmax, .model){
+  
+  dd = dfsim_w %>% 
+    filter(x %in% .predictors, n %in% .ns, y == .model, N <= .Nmax, 
+           x != "Social Status")
+  
+  brewer_palette = "Set2"
   
   # plot confidence interval width for increasing N
-  p1 = dfsim_w %>% 
-    filter(x==.predictor) %>% 
-    pivot_longer(cols = c(mean_width_ppi_ci,mean_width_pooled_ci),values_to="width",names_to="method") %>% 
-    mutate(method = str_extract(method,"ppi|pooled")) %>% 
-    ggplot(aes(N,width,color=method,fill=y,linetype=y)) + 
+  p1 = dd %>% 
+    pivot_longer(cols = ratio_ols_ppi_ci) %>% 
+    ggplot(aes(N, value, color = x)) + 
     geom_line() +
     facet_grid(~ n,labeller=labeller(n=function(lab) paste0("n=",lab))) +
-    labs(color="Method", linetype="Language Model", 
-         color="Method", y="95% CI width", x="N")
+    labs(linetype="Language Model", y = "Ratio of PPI CI width to classical CI width",
+         color="Predictor", x="N", x = "N\n(Number of LLM predictions)") +
+    scale_color_brewer(palette = brewer_palette) 
+    
+  
   
   # plot percentage of time CIs cover best parameter estimate for increasing N
-  p2 = dfsim_w %>% 
-    filter(x== .predictor) %>% 
+  p2 = dd %>% 
     pivot_longer(cols = c(coverage_ppi,coverage_pooled),values_to="coverage",names_to="method") %>% 
-    mutate(method = str_extract(method,"ppi|pooled")) %>% 
-    ggplot(aes(N,coverage,color=method,fill=y,linetype=y)) + 
+    mutate(method = method %>% 
+             str_extract("ppi|pooled") %>% 
+             factor(levels = c("pooled","ppi"), labels = c("Pooled","PPI"))) %>% 
+    ggplot(aes(N, coverage, color=x,linetype=method)) + 
     geom_line() +
     scale_y_continuous(limits = c(0,100)) + 
     facet_grid(~ n,labeller=labeller(n=function(lab) paste0("n=",lab))) +
-    labs(color="Method", linetype="Language Model", 
-         y="Coverage in %", x="N\n(Number of LLM predictions)")
+    labs(color="Method",y = "Coverage in %", linetype="Method                ") +
+    scale_color_brewer(palette = brewer_palette) +
+    guides(color = "none")
   
-  ggpubr::ggarrange(p1,p2,nrow=2,common.legend = T,legend = "right")
-  ggsave(paste0("Figures/7_SimulationResults_", .predictor,".pdf"),width=7,height=6)
-
+  
+  p = ggpubr::ggarrange(p1,p2,nrow=2,common.legend = F,legend = "right") 
+  print(p)
+  
+  ggsave(paste0("Figures/7_SimulationResults_", .model,".pdf"), plot=p, width=7,height=6)
 }
 
-Xs = unique(dfsim$x)
-for (i in seq_along(Xs)) plot_results(.predictor = Xs[i])
+models = unique(dfsim_w$y)
+Xs = unique(dfsim_w$x)
+for (i in seq_along(models)){
+  plot_results(.predictors = Xs, 
+               .ns = c(50,500), 
+               .Nmax = 2000,
+               .model = models[i])
+}
+
+
   
 
+#########################
+# Ratio 
+#########################
+
+
+
+plot_results_ratio = function(.predictors, .n, .Nmax, .model){
+  
+  colors <- tribble(
+    ~Variable,       ~Code,
+    "Age",           "#1170AAFF",
+    "Barrier",       "#FC7D0BFF",
+    "CrossingSignal","#C8D0D9FF",
+    "Fitness",       "#57606CFF",
+    "Gender",        "#5FA2CEFF",
+    "Intervention",  "#C85200FF",
+    "Species",       "#FFBC79FF",
+    "Utilitarian",   "#A3CCE9FF",
+    "Social Status", "#7B848FFF"
+  )
+  
+  dd = dfsim_w %>% 
+    filter(x %in% .predictors, n ==.n, y == .model, N <= .Nmax, 
+           x != "Social Status")
+  
+  brewer_palette = "Set2"
+  
+  # plot confidence interval width for increasing N
+  p1 = dd %>% 
+    pivot_longer(cols = ratio_ols_ppi_ci) %>% 
+    ggplot(aes(ratio_N_n, value, color = x)) + 
+    geom_line() +
+    labs(linetype="Language Model", y = "Ratio of PPI CI width to classical CI width",
+         color="Predictor", x = "Ratio of number of predictions to total sample size N/n") +
+    scale_color_manual(breaks = colors$Variable, values = colors$Code)
+  
+  
+  # plot percentage of time CIs cover best parameter estimate for increasing N
+  p2 = dd %>% 
+    pivot_longer(cols = c(coverage_ppi,coverage_pooled),values_to="coverage",names_to="method") %>% 
+    mutate(method = method %>% 
+             str_extract("ppi|pooled") %>% 
+             factor(levels = c("pooled","ppi"), labels = c("Pooled","PPI"))) %>% 
+    ggplot(aes(ratio_N_n, coverage, color=x,linetype=method)) + 
+    geom_line() +
+    scale_y_continuous(limits = c(0,100)) + 
+    labs(x = "Ratio of number of predictions to total sample size N/n",
+         color="Method",y = "Coverage in %", linetype="Method                ") +
+    guides(color = "none") +
+    scale_color_manual(breaks = colors$Variable, values = colors$Code)
+  
+  
+  p = ggpubr::ggarrange(p1,p2,nrow=2,legend = "right") 
+  print(p)
+  ggsave(paste0("Figures/7_SimulationResults_", .model,"_Nn_n",.n,".pdf"), plot=p, width=7,height=6)
+}
+
+models = unique(dfsim_w$y)
+Xs = unique(dfsim_w$x)
+ns = c(50,500)
+for (n in seq_along(ns)) {
+  for (i in seq_along(models)){
+    plot_results_ratio(.predictors = Xs, 
+                       .n = ns[n], 
+                       .Nmax = ns[n] * 5,
+                       .model = models[i])
+  }
+}
 
