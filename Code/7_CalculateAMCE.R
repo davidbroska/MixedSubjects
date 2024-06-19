@@ -24,8 +24,8 @@ example_ratio =  round(100 * p_of_classic_ci_ratio(rho=0.75, k=4), 1)
 ggplot(plotdata, aes(x = k, y = p_of_classic_ci, color = factor(rho))) +
   geom_line(linewidth=1) +
   labs(
-    x = "Ratio of number of predictions to total sample size N/n",
-    y = "Ratio of PPI CI width to classical CI width",
+    x = "Number of predictions N / gold-standard observations n",
+    y = "PPI CI width / WLS CI width",
     color = bquote(tilde(rho))
   ) +
   scale_y_continuous(breaks = seq(0,1, by=0.05)) +
@@ -55,7 +55,7 @@ ggplot(plotdata, aes(x = N, y = p_of_classic_ci, color = factor(rho))) +
   facet_wrap(~n, labeller = as_labeller(function(l) paste0("n=",l))) +
   labs(
     x = "Number of predictions N",
-    y = "Ratio of PPI CI width to classical CI width",
+    y = "PPI CI width / WLS CI width",
     color = bquote(tilde(rho))
   ) +
   scale_y_continuous(breaks = seq(0,1, by=0.05)) +
@@ -198,7 +198,7 @@ plot_results = function(.predictors, .ns, .Nmax, .model){
     ggplot(aes(N, value, color = x)) + 
     geom_line() +
     facet_grid(~ n,labeller=labeller(n=function(lab) paste0("n=",lab))) +
-    labs(linetype="Language Model", y = "Ratio of PPI CI width to classical CI width",
+    labs(linetype="Language Model", y = "PPI CI width / WLS CI width",
          color="Predictor", x="N", x = "N\n(Number of LLM predictions)") +
     scale_color_brewer(palette = brewer_palette) 
     
@@ -245,18 +245,37 @@ for (i in seq_along(models)){
 
 plot_results_ratio = function(.predictors, .n, .Nmax, .model){
   
+  species_rho = 0.5
+  
+  # one line 
+  # bquote("Sparing humans vs animals ("*tilde(rho)==.(species_rho)*")")
   colors <- tribble(
-    ~Variable,       ~Code,
-    "Age",           "#1170AAFF",
-    "Barrier",       "#FC7D0BFF",
-    "CrossingSignal","#C8D0D9FF",
-    "Fitness",       "#57606CFF",
-    "Gender",        "#5FA2CEFF",
-    "Intervention",  "#C85200FF",
-    "Species",       "#FFBC79FF",
-    "Utilitarian",   "#A3CCE9FF",
-    "Social Status", "#7B848FFF"
+    ~Variable,       ~Code,        ~Label,
+    "Species",       "#FFBC79FF",  bquote("Sparing humans ("*tilde(rho)==.(species_rho)*")"),
+    "Utilitarian",   "#A3CCE9FF",  bquote("Sparing more characters ("*tilde(rho)==.(species_rho)*")"),
+    "Age",           "#1170AAFF",  bquote("Sparing the young ("*tilde(rho)==.(species_rho)*")"),
+    "Gender",        "#5FA2CEFF",  bquote("Sparing women ("*tilde(rho)==.(species_rho)*")"),
+    "CrossingSignal","#FC7D0BFF",  bquote("Sparing the lawful ("*tilde(rho)==.(species_rho)*")"),
+    "Fitness",       "#57606CFF",  bquote("Sparing the fit ("*tilde(rho)==.(species_rho)*")"),
+    "Barrier",       "#C8D0D9FF",  bquote("Sparing pedestrians ("*tilde(rho)==.(species_rho)*")"),
+    "Intervention",  "#C85200FF",  bquote("Preference for inaction ("*tilde(rho)==.(species_rho)*")"),
+    "Social Status", "#7B848FFF",  bquote("Sparing high status ("*tilde(rho)==.(species_rho)*")")
   )
+  
+  colors <- tribble(
+    ~Variable,       ~Code,        ~Label,
+    "Species",       "#FFBC79FF",  "Sparing humans\nvs animals",
+    "Utilitarian",   "#A3CCE9FF",  "Sparing more characters\nvs fewer",
+    "Age",           "#1170AAFF",  "Sparing the young\nvs old",
+    "Gender",        "#5FA2CEFF",  "Sparing women\nvs men",
+    "CrossingSignal","#FC7D0BFF",  "Sparing the lawful\nvs unlawful",
+    "Fitness",       "#57606CFF",  "Sparing the fit\nvs the large",
+    "Barrier",       "#C8D0D9FF",  "Sparing pedestrians\nvs passengers",
+    "Intervention",  "#C85200FF",  "Preference for inaction\nvs intervention",
+    "Social Status", "#7B848FFF",  "Sparing high status\nvs low status"
+  )
+  
+
   
   dd = dfsim_w %>% 
     filter(x %in% .predictors, n ==.n, y == .model, N <= .Nmax, 
@@ -264,41 +283,96 @@ plot_results_ratio = function(.predictors, .n, .Nmax, .model){
   
   brewer_palette = "Set2"
   
+  rhos = tribble(
+    ~x,              ~y,                  ~rho,
+    "Age",           "gpt4turbo_wp_Saved", 0.53,
+    "Barrier",       "gpt4turbo_wp_Saved", 0.53,
+    "CrossingSignal","gpt4turbo_wp_Saved", 0.53,
+    "Fitness",       "gpt4turbo_wp_Saved", 0.53,
+    "Gender",        "gpt4turbo_wp_Saved", 0.53,
+    "Intervention",  "gpt4turbo_wp_Saved", 0.53,
+    "Species",       "gpt4turbo_wp_Saved", 0.53,
+    "Utilitarian",   "gpt4turbo_wp_Saved", 0.53
+  )
+  
+  
+  r = dd %>% 
+    group_by(x,y) %>% 
+    slice(which.max(ratio_N_n)) %>% 
+    left_join(rhos, by = c("x","y")) %>% 
+    mutate(rho = sub("^0\\.", ".", as.character(rho)))
+  
+  asize = 3
+  xnudge = 5.23
+  
+  add_labs = function(.plot, .var, .ynudge=0){
+    
+    lab = deparse(bquote(" "*tilde(rho)==.(filter(r,x==.var)$rho)))
+    
+    y = r %>% 
+      filter(x==.var) %>% 
+      pull(ratio_ols_ppi_ci)
+    
+    annotated = .plot + 
+      annotate("text",label=lab,y=y+.ynudge, size=asize, 
+               parse=T, x=xnudge,family = "serif") 
+      
+    return(annotated)
+  }
+  
   # plot confidence interval width for increasing N
   p1 = dd %>% 
-    pivot_longer(cols = ratio_ols_ppi_ci) %>% 
-    ggplot(aes(ratio_N_n, value, color = x)) + 
+    pivot_longer(cols = ratio_ols_ppi_ci, values_to = "ratio_ols_ppi_ci") %>% 
+    ggplot(aes(ratio_N_n, ratio_ols_ppi_ci, color = x)) + 
     geom_line() +
-    labs(linetype="Language Model", y = "Ratio of PPI CI width to classical CI width",
-         color="Predictor", x = "Ratio of number of predictions to total sample size N/n") +
-    scale_color_manual(breaks = colors$Variable, values = colors$Code)
+    labs(linetype="Language Model", y = "PPI CI width / WLS CI width",
+         color="Independent variable", x = "Number of predictions N / gold-standard observations n") +
+    scale_color_manual(breaks = colors$Variable, values = colors$Code, labels = colors$Label) +
+    theme(legend.key.height = unit(0.75, "cm"), 
+          panel.grid.major = element_line(size = 0.2),  
+          panel.grid.minor = element_line(size = 0.1)) 
   
+  p1 = p1 %>% 
+    add_labs("Age",.ynudge = -0.001) %>% 
+    add_labs("Barrier",.ynudge = -0.0005) %>% 
+    add_labs("CrossingSignal",.ynudge = -0.001) %>% 
+    add_labs("Fitness") %>% 
+    add_labs("Gender", .ynudge = 0.001) %>% 
+    add_labs("Intervention") %>% 
+    add_labs("Species") %>% 
+    add_labs("Utilitarian",.ynudge = 0.001) 
   
   # plot percentage of time CIs cover best parameter estimate for increasing N
   p2 = dd %>% 
     pivot_longer(cols = c(coverage_ppi,coverage_pooled),values_to="coverage",names_to="method") %>% 
     mutate(method = method %>% 
-             str_extract("ppi|pooled") %>% 
-             factor(levels = c("pooled","ppi"), labels = c("Pooled","PPI"))) %>% 
+             str_extract("ppi|pooled")) %>% 
     ggplot(aes(ratio_N_n, coverage, color=x,linetype=method)) + 
     geom_line() +
     scale_y_continuous(limits = c(0,100)) + 
-    labs(x = "Ratio of number of predictions to total sample size N/n",
-         color="Method",y = "Coverage in %", linetype="Method                ") +
+    labs(x = "Number of predictions N / gold-standard observations n", color="Method", 
+         y="% of CIs that cover parameter", linetype="Method                            ") +
     guides(color = "none") +
-    scale_color_manual(breaks = colors$Variable, values = colors$Code)
+    scale_color_manual(breaks = colors$Variable, values = colors$Code) +
+    scale_linetype_manual(
+      breaks=c("ppi","pooled"), 
+      labels=c("\nPrediction-powered\ninference (PPI)\n","\nWeighted least\nsquares (WLS)\n"), 
+      values=c("dashed","solid")) +
+    theme(panel.grid.major = element_line(size = 0.2), panel.grid.minor = element_line(size = 0.1)) +
+    annotate("text",label= " ", parse=T, x=xnudge, y=filter(r,x=="Age")$ratio_ols_ppi_ci,size=asize)
   
   
-  p = ggpubr::ggarrange(p1,p2,nrow=2,legend = "right") 
+  p = ggpubr::ggarrange(p1,p2,nrow=2,legend = "right", labels = "auto", vjust=1) 
   print(p)
-  ggsave(paste0("Figures/7_SimulationResults_", .model,"_Nn_n",.n,".pdf"), plot=p, width=7,height=6)
+  ggsave(filename = paste0("Figures/7_SimulationResults_", .model,"_Nn_n",.n,".pdf"), 
+         plot=p, width=7, height=6)
 }
-
 models = unique(dfsim_w$y)
 Xs = unique(dfsim_w$x)
 ns = c(50,500)
 for (n in seq_along(ns)) {
   for (i in seq_along(models)){
+    i = 1
     plot_results_ratio(.predictors = Xs, 
                        .n = ns[n], 
                        .Nmax = ns[n] * 5,
