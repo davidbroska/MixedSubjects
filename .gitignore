@@ -9,6 +9,7 @@ Data/usa_00004.csv.gz
 Data/SharedResponsesSurvey.csv
 
 
+
 Simulation
 MoralMachine/Data/*
 MoralMachine/PromptGPT
@@ -40,7 +41,7 @@ BayesRM_dfintervention_Run2.csv
 
 
 
-
 LLMs_and_Social_Science240325.pdf
 
 
+Data/6_ResultsPPI.csv.gz
