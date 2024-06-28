@@ -142,7 +142,7 @@ ggplot(dd, aes(rho, pcost, color = gamma_formatted)) +
   theme(legend.position = "bottom") + 
   labs(x = bquote(tilde(rho)), 
        y = "% of cost of recruiting human subjects saved", 
-       color = "Cost of predicting a response as a\nshare of recruiting a human subject")
+       color = expression(paste("Cost of predicting a response as a\nshare of recruiting a human subject (", gamma, ")")))
 ggsave(filename = "Figures/3_PercHumanSubjectsSaved.pdf", width=7, height=6)
 
 
