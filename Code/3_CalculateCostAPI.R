@@ -1,3 +1,6 @@
+# Load functions
+source("Code/1_Functions.R")
+
 cost = function(nprompt, ntok_in, price1k_in, ntok_out, price1k_out, verbose=T){
   
   p_in  = price1k_in / 1000
@@ -83,26 +86,75 @@ writeLines(paste0("Average cost: ",avg_c1,"$ for one API call."))
 ###########################
 
 # Cost of a 12 minute survey response with California minimum wage $16.00/hour 
-c1_human = 12 * 16/60      # $3.20    
-c1_llm   = 13*c1_gpt35     # $0.002652
+c1_human = 12 * 16/60                # $3.20    
+c1_llm   = round(13*c1_gpt35,3)     # $0.002652 to $0.003
 
 # Function to calculate the percent saved when complementing human with silicon subjects
-pcost = function(.rho, .cX, .cf, .cY){
+pcost = function(.rho, .cX, .cf, .cY, .verbose=F){
   
   # cost of silicon sampling as a share of sampling human responses
   gamma = (.cX + .cf) / .cY
   
+  
   # check is rho sufficiently large
-  is_sufficient = .rho > (2*sqrt(gamma)) / (1+gamma)
-  if(!is_sufficient) warning("Rho is not sufficiently large.")
+  minimum_rho = (2*sqrt(gamma)) / (1+gamma)
+  is_sufficient = .rho > minimum_rho
+  
+  # print warning if not
+  if(any(!is_sufficient)) print("Rho is not sufficiently large for some cases.")
   
   pcost = .rho^2 - gamma * .rho^2 - 2*sqrt(gamma * .rho^2 * (1-.rho^2))
+  
+  if(.verbose){
+    print(paste0("gamma: ", gamma))
+    print(paste0("minimum rho: ", round(minimum_rho,3)))
+  }
   
   return(pcost)
 }
 
-# 10.35% saved
-psaving = pcost(.rho=0.35, .cX=0, .cf=c1_llm, .cY=c1_survey)
+# % saved
+psaving = pcost(.rho=0.35, .cX=0, .cf=c1_llm, .cY=c1_human, .verbose = T)
+psaving
 
 # 165.63$ saved in a n=500 study
 500*c1_human * psaving
+
+
+############################################
+# Percent of recruiting human subjects saved
+############################################
+
+
+dd = expand.grid(rho = seq(0,1,by=0.025),
+                 cX = 0,
+                 cf = c(0.0001, 0.001, 0.01, 0.1),
+                 cY = 1) %>% 
+  mutate(pcost = 100 * pcost(.cX = cX, .cf = cf, .cY = cY, .rho = rho), 
+         gamma = (cX + cf) / cY, 
+         gamma_formatted = paste0(100*gamma, "%"),
+         is_sufficient = ifelse(rho > (2*sqrt(gamma)) / (1+gamma), 1, 0), 
+         pcost = ifelse(!is_sufficient, NA, pcost)
+  ) 
+
+ggplot(dd, aes(rho, pcost, color = gamma_formatted)) + 
+  geom_line() +
+  theme(legend.position = "bottom") + 
+  labs(x = bquote(tilde(rho)), 
+       y = "% of cost of recruiting human subjects saved", 
+       color = "Cost of predicting a response as a\nshare of recruiting a human subject")
+ggsave(filename = "Figures/3_PercHumanSubjectsSaved.pdf", width=7, height=6)
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
