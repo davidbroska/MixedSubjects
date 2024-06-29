@@ -137,24 +137,25 @@ dd = expand.grid(rho = seq(0,1,by=0.025),
          pcost = ifelse(!is_sufficient, NA, pcost)
   ) 
 
-ggplot(dd, aes(rho, pcost, color = gamma_formatted)) + 
+colors = tribble(
+  ~Variable,   ~Code,        ~Label,   
+  "0.01%",     "#57606CFF",  "0.01%", 
+  "0.1%",      "#1170AAFF",  "0.1%",  
+  "1%",        "#5FA2CEFF",  "1%",     
+  "10%",       "#A3CCE9FF",  "10%",    
+)
+
+title = expression(paste("Cost of predicting a response as a\nshare of recruiting a human subject (", gamma, ")"))
+
+ggplot(dd, aes(rho, pcost, color = gamma_formatted, linetype = gamma_formatted)) + 
   geom_line() +
   theme(legend.position = "bottom") + 
+  scale_color_manual(values = colors$Code, breaks = colors$Variable, labels= colors$Label) +
   labs(x = bquote(tilde(rho)), 
-       y = "% of cost of recruiting human subjects saved", 
-       color = expression(paste("Cost of predicting a response as a\nshare of recruiting a human subject (", gamma, ")")))
+       y = "% of cost of recruiting human subjects saved") +
+  guides(color = guide_legend(title = title), 
+         linetype = guide_legend(title = title)) +
+  theme(panel.grid.major = element_line(size = 0.2), panel.grid.minor = element_line(size = 0.1))
 ggsave(filename = "Figures/3_PercHumanSubjectsSaved.pdf", width=7, height=6)
-
-
-
-
-
-
-  
-
-
-
-
-
 
 
