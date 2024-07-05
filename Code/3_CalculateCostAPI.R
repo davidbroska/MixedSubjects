@@ -190,7 +190,6 @@ effect_h1 = 0.1
 effect_h0 = 0
 delta = effect_h1 - effect_h0
 
-power_ppi(.delta=delta, .n=100, .N=0, .rho=0.1, .alpha=0.05)
 
 dd_mpp = expand.grid(
   n = c(10, seq(50,2000,50)),
@@ -201,7 +200,10 @@ dd_mpp = expand.grid(
     se_ppi = SE_ppi(.n=n, .N=N, .rho=rho, 1),
     power = power_ppi(.delta=delta,.n=n,.N=N,.rho=rho))
 
-dd_mpp
+dd_mpp %>% 
+  ggplot() +
+  geom_contour_filled(aes(x = N, y = n, z = power)) +
+  facet_wrap(~rho)
 
 
 
