@@ -159,3 +159,46 @@ ggplot(dd, aes(rho, pcost, color = gamma_formatted, linetype = gamma_formatted))
 ggsave(filename = "Figures/3_PercHumanSubjectsSaved.pdf", width=7, height=6)
 
 
+
+####################
+# Most powerful pair
+####################
+
+power_ppi = function(.delta, .n, .N, .rho, .alpha=0.05){
+  
+  # estimated standard error of parameter from classic inference
+  sigma_classic = 1
+  
+  # estimated standard error of PPI parameter
+  se_ppi = (sigma_classic/sqrt(.n)) * sqrt(1-.rho^2 * (.N / (.N+.n)))
+  
+  q1 = qnorm(.alpha/2) - .delta * (1/se_ppi)
+  cdf1 = pnorm(q1, mean=0, sd=1, lower.tail=T)
+  
+  q2 = -1* qnorm(.alpha/2) - .delta * (1/se_ppi)
+  cdf2 = pnorm(q2, mean=0, sd=1, lower.tail=T)
+  
+  ppi_power = 1 - cdf1 + cdf2
+  
+  return(ppi_power)
+}
+
+effect_h1 = 0.1
+effect_h0 = 0
+delta = effect_h1 - effect_h0
+
+power_ppi(.delta=0.2, .n=100, .N=1000, .rho=0.1, .alpha=0.05)
+
+dd_mpp = expand.grid(
+  n = c(10, seq(50,2000,50)),
+  N = c(10,50, seq(100,10000,100)),
+  rho = c(0.4, 0.8),
+  delta) %>% 
+  mutate(power = power_ppi(.delta=delta,.n=n,.N=N,.rho=rho))
+
+dd_mpp
+
+
+
+
+
