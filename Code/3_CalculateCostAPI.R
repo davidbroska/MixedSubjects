@@ -173,12 +173,12 @@ power_ppi = function(.delta, .n, .N, .rho, .alpha=0.05){
   se_ppi = (sigma_classic/sqrt(.n)) * sqrt(1-.rho^2 * (.N / (.N+.n)))
   
   q1 = qnorm(.alpha/2) - .delta * (1/se_ppi)
-  cdf1 = pnorm(q1, mean=0, sd=1, lower.tail=T)
+  p1 = 1 - pnorm(q1, mean=0, sd=1, lower.tail=T)
   
   q2 = -1* qnorm(.alpha/2) - .delta * (1/se_ppi)
-  cdf2 = pnorm(q2, mean=0, sd=1, lower.tail=T)
+  p2 = pnorm(q2, mean=0, sd=1, lower.tail=T)
   
-  ppi_power = 1 - cdf1 + cdf2
+  ppi_power = p1 + p2
   
   return(ppi_power)
 }
