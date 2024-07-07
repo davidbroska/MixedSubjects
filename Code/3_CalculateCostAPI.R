@@ -175,7 +175,7 @@ power_ppi = function(.delta, .n, .N, .rho, .sigma_classic = 1, .alpha=0.05){
   se_ppi = SE_ppi(.n, .N, .rho, .sigma_classic)
   
   q1 = qnorm(.alpha/2, lower.tail = F) - .delta * (1/se_ppi)
-  p1 = pnorm(q1, lower.tail=F)
+  p1 = pnorm(q1, mean=0, sd=1, lower.tail=F)
   
   q2 = - qnorm(.alpha/2, lower.tail = F) - .delta * (1/se_ppi)
   p2 = pnorm(q2, mean=0, sd=1, lower.tail=T)
@@ -192,18 +192,49 @@ delta = effect_h1 - effect_h0
 
 
 dd_mpp = expand.grid(
-  n = c(10, seq(50,2000,50)),
-  N = c(10,50, seq(100,10000,100)),
+  n = c(10, seq(50,1000,50)),
+  N = c(10,50, seq(100,5000,100)),
   rho = c(0.4, 0.8),
+  budget = 500, 
+  gamma = c(0.01),
   delta) %>% 
   mutate(
+    cost_tradeoff = (budget - gamma * N)/(1+gamma),
     se_ppi = SE_ppi(.n=n, .N=N, .rho=rho, 1),
     power = power_ppi(.delta=delta,.n=n,.N=N,.rho=rho))
 
 dd_mpp %>% 
   ggplot() +
-  geom_contour_filled(aes(x = N, y = n, z = power)) +
-  facet_wrap(~rho)
+  geom_contour_filled(aes(x = N, y = n, z = power),
+                      breaks = c(0, 0.8, 0.9, 0.95, 1)) +
+  geom_line(aes(N, cost_tradeoff)) +
+  facet_wrap(~rho) 
+
+
+###############################
+# Cheapest pair for given power
+###############################
+
+
+dd_cp = expand.grid(
+  n = c(10, seq(50,1000,50)),
+  N = c(10,50, seq(100,5000,100)),
+  power = c(0.8, 0.9, 0.95),
+  rho = c(0.4, 0.8),
+  budget = 500, 
+  gamma = c(0.01),
+  delta) %>% 
+  mutate(
+    cost_tradeoff = (budget - gamma * N)/(1+gamma),
+    se_ppi = SE_ppi(.n=n, .N=N, .rho=rho, 1))
+
+dd_mpp %>% 
+  ggplot() +
+  geom_contour_filled(aes(x = N, y = n, z = power),
+                      breaks = c(0, 0.8, 0.9, 0.95, 1)) +
+  geom_line(aes(N, cost_tradeoff)) +
+  facet_wrap(~rho) 
+
 
 
 
