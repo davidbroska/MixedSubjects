@@ -205,7 +205,7 @@ dd_mpp = expand.grid(
 
 dd_mpp %>% 
   ggplot() +
-  geom_contour_filled(aes(x = N, y = n, z = power),
+  geom_contour(aes(x = N, y = n, z = power),
                       breaks = c(0, 0.8, 0.9, 0.95, 1)) +
   geom_line(aes(N, cost_tradeoff)) +
   facet_wrap(~rho) 
@@ -236,6 +236,48 @@ dd_mpp %>%
   facet_wrap(~rho) 
 
 
+####
+# indifference curves
+####
+
+power_curve <- function(n, n0, rho){
+  return( n*(n0 -  n)/(n - n0*(1 - rho^2)) )
+}
+
+lower_bound <- function(n0, rho){
+  return( n0*(1 - rho^2))
+}
+
+cost_curve <- function(n, n0, gamma) {
+  return( (1 + gamma)*(n0 - n))
+}
+
+n_star <- function(n0, rho, gamma) {
+  return( n0*(1 - rho^2 + sqrt(gamma*rho^2*(1 - rho^2))))
+}
+
+
+
+
+rho = 0.5
+gamma = 0.01
+n0 = 800
+lower_n = as.integer(lower_bound(n0, rho))
+
+# compute optimal n_star, N_star
+n_opt = n_star(n0, rho, gamma)
+N_opt = power_curve(n_opt, n0, rho)
+
+
+df_indiff <- 
+  tibble(rho = rho,
+         gamma = gamma,
+         n = (lower_n+20):n0) %>% 
+  mutate(N = power_curve(n, n0, rho))
+
+ggplot(df_indiff) + 
+  geom_line(aes(x = N, y = n)) +
+  geom_point(aes(y = n_opt, x = N_opt))
 
 
 
