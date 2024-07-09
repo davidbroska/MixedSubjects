@@ -240,45 +240,60 @@ dd_mpp %>%
 # indifference curves
 ####
 
-power_curve <- function(n, n0, rho){
-  return( n*(n0 -  n)/(n - n0*(1 - rho^2)) )
+
+power_curve <- function(N, n0, rho){
+  n <- (-N + n0 + sqrt(N^2 + 2*N*n0 + n0^2 - 4*N*n0*rho^2))/2
+  return(n)
 }
 
-lower_bound <- function(n0, rho){
-  return( n0*(1 - rho^2))
-}
 
-cost_curve <- function(n, n0, gamma) {
-  return( (1 + gamma)*(n0 - n))
-}
 
 n_star <- function(n0, rho, gamma) {
-  return( n0*(1 - rho^2 + sqrt(gamma*rho^2*(1 - rho^2))))
+  return( n0*(1 - rho^2 + sqrt(gamma * rho^2 * (1 - rho^2))) )
+}
+
+N_star <- function(n0, rho, gamma) {
+  n_opt <- n_star(n0, rho, gamma)
+  N = n_opt * (n0 - n_opt)/(n_opt - n0*(1 - rho^2))
+  return(N)
+}
+
+c_star <- function(n0, rho, gamma) {
+  cost <- n0*(1 - rho^2 + gamma*rho^2 + 2*sqrt(gamma*rho^2*(1-rho^2)))
+  return(cost)
+}
+
+
+cost_curve <- function(N, n0, rho, gamma) {
+  cost <- c_star(n0, rho, gamma)
+  n <-  (cost - gamma*N)/(1+gamma)
 }
 
 
 
-
-rho = 0.5
-gamma = 0.01
-n0 = 800
-lower_n = as.integer(lower_bound(n0, rho))
-
-# compute optimal n_star, N_star
-n_opt = n_star(n0, rho, gamma)
-N_opt = power_curve(n_opt, n0, rho)
+rhos <- c(0.5, 0.75)
+gammas <- c(0.04, 0.02)
+n0s <- c(100, 200)
+Ns <-  seq(0,1000, length.out = 100)
 
 
-df_indiff <- 
-  tibble(rho = rho,
-         gamma = gamma,
-         n = (lower_n+20):n0) %>% 
-  mutate(N = power_curve(n, n0, rho))
+df_cost <- expand_grid(
+  n0 = n0s,
+  gamma = gammas,
+  rho = rhos,
+  N = Ns
+) %>% 
+  mutate(
+    n_opt = n_star(n0, rho, gamma),
+    N_opt = N_star(n0, rho, gamma),
+    n_cost = cost_curve(N, n0, rho, gamma),
+    n_power = power_curve(N, n0, rho)) 
 
-ggplot(df_indiff) + 
-  geom_line(aes(x = N, y = n)) +
-  geom_point(aes(y = n_opt, x = N_opt))
-
+ggplot(df_cost) +
+  geom_line(aes(x = N, y = n_power, group = n0)) +
+  geom_line(aes(x = N, y = n_cost, group = n0)) +
+  geom_point(aes(x = N_opt, y = n_opt, group = n0)) +
+  facet_grid(rows = vars(gamma), col = vars(rho))
 
 
 
