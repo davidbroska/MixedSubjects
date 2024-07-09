@@ -263,8 +263,7 @@ c_star = function(n0, rho, gamma) {
 }
 
 
-cost_curve = function(N, n0, rho, gamma) {
-  cost = c_star(n0, rho, gamma)
+cost_curve = function(N, cost, gamma) {
   n =  (cost - gamma*N)/(1+gamma)
 }
 
@@ -285,7 +284,7 @@ df_cost = expand_grid(
   mutate(
     n_opt = n_star(n0, rho, gamma),
     N_opt = N_star(n0, rho, gamma),
-    n_cost = cost_curve(N, n0, rho, gamma),
+    n_cost = cost_curve(N, c_star(n0, rho, gamma), gamma),
     n_power = power_curve(N, n0, rho)) 
 
 
@@ -313,5 +312,50 @@ ggplot(df_cost) +
 ggsave(filename = "Figures/3_IndifferenceMostPowerfulPair.pdf", width=7, height=6)
 
 
+####
+# Lowest cost given power
+###
 
 
+n0 <- 200 # power level determined by n0
+gamma <- 0.05
+rho <- 0.75
+Ns <- seq(0, 1000, length.out = 100)
+
+df_lowest_cost <- tibble(
+  N = Ns,
+  n_power = power_curve(N, n0, rho),
+  n_cost_opt = cost_curve(N, c_star(n0, rho, gamma), gamma),
+  n_cost_bad = cost_curve(N, n0*0.8, gamma)
+)
+
+ggplot(df_lowest_cost) +
+  geom_line(aes(x = N, y = n_power), color = "black") +
+  geom_line(aes(x = N, y = n_cost_opt ), color = "darkred") +
+  geom_line(aes(x = N, y = n_cost_bad), color = "darkred") +
+  labs(title = "Same level of power, higher cost")
+
+
+
+####
+# Highest power given budget
+###
+
+
+n0 <- 200 # power level determined by n0
+gamma <- 0.05
+rho <- 0.75
+Ns <- seq(0, 1000, length.out = 100)
+
+df_lowest_cost <- tibble(
+  N = Ns,
+  n_power_opt = power_curve(N, n0, rho),
+  n_cost = cost_curve(N, c_star(n0, rho, gamma), gamma),
+  n_power_bad = power_curve(N, n0*0.8, rho)
+)
+
+ggplot(df_lowest_cost) +
+  geom_line(aes(x = N, y = n_power_opt), color = "black") +
+  geom_line(aes(x = N, y = n_power_bad ), color = "black") +
+  geom_line(aes(x = N, y = n_cost), color = "darkred") +
+  labs(title = "Same cost, lower power")
