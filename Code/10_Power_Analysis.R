@@ -66,7 +66,7 @@ power_curve = function(N, n0, rho){
   return(n)
 }
 
-add_power_curve = function(p, N, n0, rho, color = "black") {
+add_power_curves = function(p, N, n0, rho, color = "black") {
   df <- expand_grid(N = N, n0 = n0) %>% 
     mutate(n = power_curve(N, n0, rho))
   return(p + geom_line(aes(x = N, 
@@ -80,7 +80,7 @@ cost_curve = function(N, n0, gamma) {
   n =  (n0 - gamma*N)/(1+gamma)
 }
 
-add_cost_curve = function(p, N, n0, gamma, color = "red") {
+add_cost_curves = function(p, N, n0, gamma, color = "red") {
   df <- expand_grid(N = N, n0 = n0) %>% 
     mutate(n = cost_curve(N, n0, gamma))
   return(p + geom_line(aes(x = N, y = n, group = n0),
@@ -88,8 +88,20 @@ add_cost_curve = function(p, N, n0, gamma, color = "red") {
                        color = color))
 }
 
-p <- ggplot()
-p <- add_cost_curve(p, 0:1000, c(200, 250), 0.01)
-p
-add_power_curve(p, 0:1000, c(300, 350), 0.4)
+####
+# Most powerful pair visualization
+####
+
+betas <- c(0.2, 0.15, 0.1, 0.05)
+d <- 0.2
+delta <- d
+sigma <- 1
+n0 <- map_dbl(betas, \(b) classical_power_analysis(delta, sigma, b))
+gamma <- 0.05
+rho <- 0.75
+optimal_pair <- cheapest_pair(delta, sigma, rho, gamma, beta = 0.1)
+
+p <- ggplot() %>% 
+  add_power_curves(seq(0,1000,10), n0, rho) %>% 
+  add_cost_curve(seq(0,1000,10), )
 
