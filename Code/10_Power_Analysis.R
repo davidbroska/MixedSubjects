@@ -56,3 +56,40 @@ most_powerful_pair = function(delta, sigma, rho, gamma, budget, cost_Y) {
                        gamma))
   }
 }
+
+######
+# Plotting functions
+######
+
+power_curve = function(N, n0, rho){
+  n = (-N + n0 + sqrt(N^2 + 2*N*n0 + n0^2 - 4*N*n0*rho^2))/2
+  return(n)
+}
+
+add_power_curve = function(p, N, n0, rho, color = "black") {
+  df <- expand_grid(N = N, n0 = n0) %>% 
+    mutate(n = power_curve(N, n0, rho))
+  return(p + geom_line(aes(x = N, 
+                           y = n, 
+                           group = n0),
+                       data = df, 
+                       color = color))
+}
+
+cost_curve = function(N, n0, gamma) {
+  n =  (n0 - gamma*N)/(1+gamma)
+}
+
+add_cost_curve = function(p, N, n0, gamma, color = "red") {
+  df <- expand_grid(N = N, n0 = n0) %>% 
+    mutate(n = cost_curve(N, n0, gamma))
+  return(p + geom_line(aes(x = N, y = n, group = n0),
+                       data = df,
+                       color = color))
+}
+
+p <- ggplot()
+p <- add_cost_curve(p, 0:1000, c(200, 250), 0.01)
+p
+add_power_curve(p, 0:1000, c(300, 350), 0.4)
+
