@@ -100,8 +100,15 @@ n0 <- map_dbl(betas, \(b) classical_power_analysis(delta, sigma, b))
 gamma <- 0.05
 rho <- 0.75
 optimal_pair <- cheapest_pair(delta, sigma, rho, gamma, beta = 0.1)
+n_cost <- optimal_pair[1]*(1+gamma)+gamma*optimal_pair[2]
 
 p <- ggplot() %>% 
   add_power_curves(seq(0,1000,10), n0, rho) %>% 
-  add_cost_curve(seq(0,1000,10), )
+  add_cost_curve(seq(0,1000,10), n_cost, gamma)
+p
+
+
+####
+# Cheapest pair visualization
+####
 
