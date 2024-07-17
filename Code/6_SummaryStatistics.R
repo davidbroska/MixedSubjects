@@ -19,18 +19,21 @@ corr_tab = df %>%
             N = sum(!is.na(ModelSaved))/2) %>% 
   mutate(Model = str_remove(name,"_.+"), 
          Type = case_when(
-           str_detect(name, "wp_Saved_[2-3]|wp_Saved$") ~ "Replicate", 
+           str_detect(name, "wp_Saved$") ~  "Prediction", 
+           str_detect(name, "wp_Saved_2") ~ "Replicate 1", 
+           str_detect(name, "wp_Saved_3") ~ "Replicate 2", 
            str_detect(name, "np_Saved") ~ "Without persona",
-           str_detect(name, "_mode") ~ "Mode across replicates")) %>% 
+           str_detect(name, "_mode") ~ "Mode across prediction and replicates") %>% 
+           factor(levels = c("Prediction","Replicate 1","Replicate 2","Mode across prediction and replicates","Without persona"))) %>% 
   select(Model, Type, Correlation = correlation, N) %>% 
   arrange(desc(Model), Type, desc(N))  
 
 
 
 caption = paste0(
-  "Correlation of survey respondents' evaluation of a moral dilemma with the LLM prediction. ",
+  "Pearson correlation of survey respondents' decision for a moral dilemma with the LLM predicted decision. ",
   "In addition to the 22,315 predictions, we assess how the correlation varies by prompting the LLM to give 5,000 additional predictions. ",
-  "We form a composite from the modal prediction of three identical prompts. For a separate set of predictions, we omit the demographic persona from the prompt.",
+  "We form a composite from the modal prediction of three identical prompts. For a separate set of predictions, we omit the demographic persona from the prompt."
 )
 kable(corr_tab, format = "latex",digits = 3, label = "corr-tab",booktabs=T, align = c("l","l","c","c"),
       caption = caption) %>% 
