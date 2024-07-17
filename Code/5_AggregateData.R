@@ -58,22 +58,30 @@ df = files %>%
 ##############################
 # Calculate mode of replicates
 ##############################
-find_mode = function(data, vars){
+find_mode = function(.data, .vars, .na_rm=F){
   
   # subset data to relevant column
-  df = select(data, all_of(vars))
+  df = .data[,.vars]
     
   # find mode per row for these columns
   apply(df, MARGIN=1, FUN=function(row){
     
+    # get counts
     counts = row %>%
-      table() %>%
-      sort(.,decreasing =T)
+      table(useNA = "always") %>%
+      sort(., decreasing =T)
     
+    # find mode
     mode = counts %>%
       names() %>%
       as.integer() %>%
       {{.[1]}}
+    
+    # rename 
+    names(counts)[is.na(names(counts))] = "<NA>"
+    
+    # set mode to NA if at least one value is NA
+    if(counts["<NA>"] >= 1 & .na_rm==F)  mode = NA
     
     return(mode)
   })
@@ -87,6 +95,7 @@ gpt4o_wp_reps = c("gpt4o_wp_Saved", "gpt4o_wp_Saved_2", "gpt4o_wp_Saved_3")
 df$gpt35turbo0125_wp_Saved_mode = find_mode(df, gpt35turbo0125_wp_reps)
 df$gpt4turbo_wp_Saved_mode = find_mode(df, gpt4turbo_wp_reps)
 df$gpt4o_wp_Saved_mode = find_mode(df, gpt4o_wp_reps)
+
 
 # verify
 df %>% select(all_of(c(gpt35turbo0125_wp_reps,"gpt35turbo0125_wp_Saved_mode"))) %>% head()
