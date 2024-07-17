@@ -8,7 +8,6 @@ library(AER)
 library(sandwich)
 library(multiwayvcov)
 library(gridExtra)
-library(VGAM)
 library(purrr)
 library(ggpubr)
 
