@@ -8,6 +8,9 @@ library(AER)
 library(sandwich)
 library(multiwayvcov)
 library(gridExtra)
+library(VGAM)
+library(purrr)
+library(ggpubr)
 
 # default theme for ggplot2
 theme_set(theme_bw(base_family = "serif"))

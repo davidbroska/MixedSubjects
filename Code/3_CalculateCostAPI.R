@@ -150,7 +150,7 @@ title = expression(paste("Cost of predicting a response as a\nshare of recruitin
 ggplot(dd, aes(rho, pcost, color = gamma_formatted, linetype = gamma_formatted)) + 
   geom_line() +
   theme(legend.position = "bottom") + 
-  scale_color_manual(values = colors$Code, breaks = colors$Variable, labels= colors$Label) +
+  scale_color_manual(values = colors$Code, breaks = colors$Variable, labels = colors$Label) +
   labs(x = bquote(tilde(rho)), 
        y = "% of cost of recruiting human subjects saved") +
   guides(color = guide_legend(title = title), 
@@ -312,17 +312,17 @@ ggplot(df_cost) +
 ggsave(filename = "Figures/3_IndifferenceMostPowerfulPair.pdf", width=7, height=6)
 
 
-####
+#########################
 # Lowest cost given power
-###
+#########################
 
 
-n0 <- 200 # power level determined by n0
-gamma <- 0.05
-rho <- 0.75
-Ns <- seq(0, 1000, length.out = 100)
+n0 = 200 # power level determined by n0
+gamma = 0.05
+rho = 0.75
+Ns = seq(0, 1000, length.out = 100)
 
-df_lowest_cost <- tibble(
+df_lowest_cost = tibble(
   N = Ns,
   n_power = power_curve(N, n0, rho),
   n_cost_opt = cost_curve(N, c_star(n0, rho, gamma), gamma),
@@ -337,17 +337,17 @@ ggplot(df_lowest_cost) +
 
 
 
-####
+############################
 # Highest power given budget
-###
+############################
 
 
-n0 <- 200 # power level determined by n0
-gamma <- 0.05
-rho <- 0.75
-Ns <- seq(0, 1000, length.out = 100)
+n0 = 200 # power level determined by n0
+gamma = 0.05
+rho = 0.75
+Ns = seq(0, 1000, length.out = 100)
 
-df_lowest_cost <- tibble(
+df_lowest_cost = tibble(
   N = Ns,
   n_power_opt = power_curve(N, n0, rho),
   n_cost = cost_curve(N, c_star(n0, rho, gamma), gamma),
@@ -359,3 +359,4 @@ ggplot(df_lowest_cost) +
   geom_line(aes(x = N, y = n_power_bad ), color = "black") +
   geom_line(aes(x = N, y = n_cost), color = "darkred") +
   labs(title = "Same cost, lower power")
+
