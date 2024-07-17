@@ -11,7 +11,7 @@ ppi_standard_error = function(n, N, sigma, rho){
 ppi_power = function(n, N, delta, sigma, rho, alpha = 0.05) {
   signal = delta/ppi_standard_error(n, N, sigma, rho)
   z_alpha = qnorm(1-alpha/2)
-  power = pfoldnorm(z_alpha, mean = signal, lower.tail = FALSE)
+  power = pnorm(z_alpha, mean = signal, lower.tail = FALSE) + pnorm(-z_alpha, mean = signal)
   return(power)
 }
 
@@ -65,12 +65,18 @@ power_curve = function(N, n0, rho){
   return(n)
 }
 
-add_power_curves = function(p, N, n0, rho, color = "black") {
+add_power_curves = function(p, N, n0, rho, delta, sigma, color = "black", label = FALSE) {
   df = expand_grid(N = N, n0 = n0) %>% 
-    mutate(n = power_curve(N, n0, rho))
+    mutate(n = power_curve(N, n0, rho),
+           power = ppi_power(n, N, delta, sigma, rho))
+  if (label) {
+    p = p + geom_line(aes(x = N, y = n, group = n0, color = power), 
+                      data = df)
+  } else {
+    p = p + geom_line(aes(x = N, y = n, group = n0), 
+                      data = df, color = color)
+  }
   
-  p = p + 
-    geom_line(aes(x = N, y = n, group = n0), data = df, color = color)
   
   return(p)
 }
@@ -79,12 +85,18 @@ cost_curve = function(N, n0, gamma) {
   n = (n0 - gamma*N)/(1+gamma)
 }
 
-add_cost_curves = function(p, N, n0, gamma, color = "darkred") {
+add_cost_curves = function(p, N, n0, gamma, color = "darkred", label = FALSE) {
   df = expand_grid(N = N, n0 = n0) %>% 
-    mutate(n = cost_curve(N, n0, gamma))
+    mutate(n = cost_curve(N, n0, gamma),
+           cost = n0)
+  if (label) {
+    p = p + 
+      geom_line(aes(x = N, y = n, group = n0, color = cost), data = df)
+  } else {
+    p = p + 
+      geom_line(aes(x = N, y = n, group = n0), data = df, color = color)
+  }
   
-  p = p + 
-    geom_line(aes(x = N, y = n, group = n0), data = df, color = color)
   
   return(p)
 }
@@ -106,7 +118,7 @@ n0_cost = optimal_pair[1]*(1 + gamma)+gamma * optimal_pair[2]
 N = seq(0, 1000, 10)
 
 pp = ggplot() %>% 
-  add_power_curves(N, n0_power, rho) %>% 
+  add_power_curves(N, n0_power, rho, delta, sigma, label=T) %>% 
   add_cost_curves(N, n0_cost, gamma) +
   annotate("point", x = optimal_pair[2], y = optimal_pair[1])
 pp
@@ -131,8 +143,8 @@ n0_power = classical_power_analysis(delta, sigma, beta)
 N = seq(0, 1000, 10)
 
 cp = ggplot() %>% 
-  add_cost_curves(N, n0_cost, gamma) %>% 
-  add_power_curves(N, n0_power, rho) +
+  add_cost_curves(N, n0_cost, gamma, label = T) %>% 
+  add_power_curves(N, n0_power, rho, delta, sigma) +
   annotate("point", x = optimal_pair[2], y = optimal_pair[1]) 
 cp
 
