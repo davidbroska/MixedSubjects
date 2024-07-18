@@ -303,7 +303,7 @@ cols = tribble(
   ~var,     ~col,      ~lab, 
   "mmsFreq",  "#DDCC77", " Stratified Moral Machine Sample ",
   "acsFreq",  "#CC6677", " American Community Survey ",
-  "mmFreq",   "#4477AA", " Raw Moral Machine Sample ") %>% 
+  "mmFreq",   "#4477AA", " Moral Machine Convenience Sample ") %>% 
   mutate(lab = str_replace_all(lab," ","\n"),
          var = factor(var,ordered = T))
 labell = c(AgeBracket="Age",EducationBracket="Education",

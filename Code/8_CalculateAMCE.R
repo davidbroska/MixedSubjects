@@ -141,21 +141,17 @@ example_ratio =  round(100 * p_of_classic_ci_ratio(rho=0.75, k=4), 1)
 ggplot(plotdata, aes(x = k, y = p_of_classic_ci, color = factor(rho))) +
   geom_line(linewidth=1) +
   scale_y_continuous(breaks = seq(0,1, by=0.05)) +
-  theme(
-    legend.position = "bottom", 
-    text=element_text(size=12)
-  ) +
+  theme(legend.position = "bottom") +
   scale_color_manual(
     breaks = c(0.25,0.5,0.75), 
     values = c("#CC6677","#DDCC77","#4477AA")
   ) +
   labs(
     x = "Number of predictions N / gold-standard observations n",
-    y = "PPI CI width / WLS CI width",
+    y = "PPI SE / Classical SE",
     color = bquote(tilde(rho))
   )
-ggsave("Figures/8_WidthAsShareOfClassicCIWidth_ratio.pdf", width=5, height=4.5)
-
+ggsave("Figures/8_WidthAsShareOfClassicCIWidth_ratio.pdf", width=7, height=6)
 
 
 

@@ -12,7 +12,7 @@ library(purrr)
 library(ggpubr)
 
 # default theme for ggplot2
-theme_set(theme_bw(base_family = "serif"))
+theme_set(theme_bw(base_family = "serif", base_size = 13))
 
 
 # Custom functions

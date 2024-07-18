@@ -68,16 +68,19 @@ power_curve = function(N, n0, rho){
 add_power_curves = function(p, N, n0, rho, delta, sigma, color = "black", label = FALSE) {
   df = expand_grid(N = N, n0 = n0) %>% 
     mutate(n = power_curve(N, n0, rho),
-           power = ppi_power(n, N, delta, sigma, rho))
+           power = ppi_power(n, N, delta, sigma, rho) %>% round(2))
   if (label) {
-    p = p + geom_line(aes(x = N, y = n, group = n0, color = power), 
-                      data = df)
+    p = p + 
+      geom_line(aes(x = N, y = n, group = n0, color = factor(power)), data = df) + 
+      labs(color = "Power") +
+      scale_color_manual(
+        breaks = c(0.95,0.9,0.85,0.8), 
+        values = c("#99000d","#a50f15","#de2d26","#fb6a4a")
+      ) 
   } else {
-    p = p + geom_line(aes(x = N, y = n, group = n0), 
-                      data = df, color = color)
+    p = p + 
+      geom_line(aes(x = N, y = n, group = n0), data = df, color = color)
   }
-  
-  
   return(p)
 }
 
@@ -91,7 +94,12 @@ add_cost_curves = function(p, N, n0, gamma, cost_Y, color = "darkred", label = F
            cost = cost_Y*n0)
   if (label) {
     p = p + 
-      geom_line(aes(x = N, y = n, group = n0, color = cost), data = df)
+      geom_line(aes(x = N, y = n, group = n0, color = factor(cost)), data = df) + 
+      labs(color = "Budget") +
+      scale_color_manual(
+        breaks = c(225,200,175,150), 
+        values = c("#005a32","#006d2c","#238b45","#74c476")
+      ) 
   } else {
     p = p + 
       geom_line(aes(x = N, y = n, group = n0), data = df, color = color)
@@ -156,8 +164,17 @@ cp
 ###############
 
 ymax = 325
-pp = pp + lims(y = c(NA, ymax)) 
-cp = cp + lims(y = c(NA, ymax)) 
+y_to_x_ratio = 1000/ymax/2
+pp = pp + 
+  coord_fixed(ratio = y_to_x_ratio) +
+  lims(y = c(NA, ymax)) + 
+  labs(title = "Finding the most powerful pair (n, N) for given budget") + 
+  theme(plot.title = element_text(size = 14))
+cp = cp + 
+  lims(y = c(NA, ymax)) + 
+  coord_fixed(ratio = y_to_x_ratio) +
+  labs(title = "Finding the cheapest pair (n, N) for given statistical power") +
+  theme(plot.title = element_text(size = 14))
 
 
 p = ggpubr::ggarrange(pp,cp,nrow=2,legend = "right", labels = "auto", vjust=1) 
