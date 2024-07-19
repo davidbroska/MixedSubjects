@@ -72,7 +72,11 @@ add_power_curves = function(p, N, n0, rho, delta, sigma, color = "black", label 
   if (label) {
     p = p + 
       geom_line(aes(x = N, y = n, group = n0, color = factor(power)), data = df) + 
-      labs(color = "Power") +
+      labs(title = "Finding the most powerful pair (n, N) for given budget", color = "Power") +
+      theme(
+        plot.title = element_text(size = 13.5), 
+        legend.title = element_text(size = 13)
+        ) + 
       scale_color_manual(
         breaks = c(0.95,0.9,0.85,0.8), 
         values = c("#99000d","#a50f15","#de2d26","#fb6a4a")
@@ -95,7 +99,11 @@ add_cost_curves = function(p, N, n0, gamma, cost_Y, color = "darkred", label = F
   if (label) {
     p = p + 
       geom_line(aes(x = N, y = n, group = n0, color = factor(cost)), data = df) + 
-      labs(color = "Budget") +
+      labs(title = "Finding the cheapest pair (n, N) for given statistical power", color = "Budget") +
+      theme(
+        plot.title = element_text(size = 13.5), 
+        legend.title = element_text(size = 13)
+      ) + 
       scale_color_manual(
         breaks = c(225,200,175,150), 
         values = c("#005a32","#006d2c","#238b45","#74c476")
@@ -129,7 +137,7 @@ N = seq(0, 1000, 10)
 pp = ggplot() %>% 
   add_power_curves(N, n0_power, rho, delta, sigma, label=T) %>% 
   add_cost_curves(N, n0_cost, gamma, cost_Y) +
-  annotate("point", x = optimal_pair[2], y = optimal_pair[1])
+  annotate("point", x = optimal_pair[2], y = optimal_pair[1], shape = 4, size = 2.4, stroke = 0.8)
 pp
 
 
@@ -154,7 +162,7 @@ N = seq(0, 1000, 10)
 cp = ggplot() %>% 
   add_cost_curves(N, n0_cost, gamma, cost_Y, label = T) %>% 
   add_power_curves(N, n0_power, rho, delta, sigma) +
-  annotate("point", x = optimal_pair[2], y = optimal_pair[1]) 
+  annotate("point", x = optimal_pair[2], y = optimal_pair[1], shape = 4, size = 2.4, stroke = 0.8) 
 cp
 
 
@@ -167,14 +175,10 @@ ymax = 325
 y_to_x_ratio = 1000/ymax/2
 pp = pp + 
   coord_fixed(ratio = y_to_x_ratio) +
-  lims(y = c(NA, ymax)) + 
-  labs(title = "Finding the most powerful pair (n, N) for given budget") + 
-  theme(plot.title = element_text(size = 14))
+  lims(y = c(NA, ymax)) 
 cp = cp + 
   lims(y = c(NA, ymax)) + 
-  coord_fixed(ratio = y_to_x_ratio) +
-  labs(title = "Finding the cheapest pair (n, N) for given statistical power") +
-  theme(plot.title = element_text(size = 14))
+  coord_fixed(ratio = y_to_x_ratio) 
 
 
 p = ggpubr::ggarrange(pp,cp,nrow=2,legend = "right", labels = "auto", vjust=1) 
