@@ -137,7 +137,7 @@ N = seq(0, 1000, 10)
 pp = ggplot() %>% 
   add_power_curves(N, n0_power, rho, delta, sigma, label=T) %>% 
   add_cost_curves(N, n0_cost, gamma, cost_Y) +
-  annotate("point", x = optimal_pair[2], y = optimal_pair[1], shape = 4, size = 2.4, stroke = 0.8)
+  annotate("point", x = optimal_pair[2], y = optimal_pair[1], shape = 4, size = 2.2, stroke = 0.7)
 pp
 
 
@@ -162,7 +162,7 @@ N = seq(0, 1000, 10)
 cp = ggplot() %>% 
   add_cost_curves(N, n0_cost, gamma, cost_Y, label = T) %>% 
   add_power_curves(N, n0_power, rho, delta, sigma) +
-  annotate("point", x = optimal_pair[2], y = optimal_pair[1], shape = 4, size = 2.4, stroke = 0.8) 
+  annotate("point", x = optimal_pair[2], y = optimal_pair[1], shape = 4, size = 2.2, stroke = 0.7) 
 cp
 
 
