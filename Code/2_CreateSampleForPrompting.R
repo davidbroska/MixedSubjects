@@ -40,11 +40,11 @@ acs = get_filepath("usa_00004.csv.gz") %>%
       factor(levels=c("Man","Woman")),
     
     EducationBracket:= case_when(
-      SCHL<=15 ~ "Less than high school",
+      SCHL<=15 ~ "Less than\nhigh school",
       SCHL %in% c(16:17) ~"High school",
       SCHL %in% c(18:21) ~"Some college",
       SCHL %in% c(22:24) ~"Postgraduate") %>% 
-      factor(levels=c("Less than high school","High school","Some college","Postgraduate")))
+      factor(levels=c("Less than\nhigh school","High school","Some college","Postgraduate")))
 
 ## Calculate percentages and correct with weights
 acsPerc = acs %>% 
@@ -66,8 +66,8 @@ summarize_all(acsPerc, ~ sum(is.na(.)))
 ################################################################################
 
 
-# Read data with survey responses
-profiles.S = get_filepath("SharedResponsesSurvey.csv") %>% 
+# Download data from https://osf.io/3hvt2/?view_only=4bb49492edee4a8eb1758552a362a2cf
+profiles.S = get_filepath("SharedResponsesSurvey.csv.tar") %>% 
   fread() %>% 
   mutate(across(Review_age, as.numeric)) 
 
@@ -118,11 +118,11 @@ profiles.S = profiles.S %>%
   mutate(
     # Create education categories
     Review_educationBracket = case_when(
-      Review_education == "underHigh" ~ "Less than high school",
+      Review_education == "underHigh" ~ "Less than\nhigh school",
       Review_education == "high" ~ "High school",
       Review_education %in% c("college","bachelor","vocational") ~ "Some college",
       Review_education == "graduate" ~ "Postgraduate") %>% 
-      factor(levels=c("Less than high school","High school","Some college","Postgraduate")), 
+      factor(levels=c("Less than\nhigh school","High school","Some college","Postgraduate")), 
     Review_ageBracket = case_when(
       Review_age>=15 & Review_age<25 ~"15-24",
       Review_age>=25 & Review_age<35 ~"25-34",
@@ -235,7 +235,8 @@ all(count(mms_sample,ResponseID)$n == 2)
 # Join columns that characterize scenario --------------------------------------
 ################################################################################
 
-profiles.S.full = get_filepath("SharedResponses.csv") %>% 
+# Download data from https://osf.io/3hvt2/?view_only=4bb49492edee4a8eb1758552a362a2cf
+profiles.S.full = get_filepath("SharedResponses.csv.tar") %>% 
   fread() 
 
 mms = mms_sample %>% 
@@ -327,7 +328,7 @@ FreqLong %>%
              labeller = labeller(Variable=labell)) +
   scale_fill_manual(breaks = cols$var, values = cols$col,labels=cols$lab) +
   labs(fill = "Dataset",x="Level of variable",y="Relative frequency") +
-  theme(axis.text.x = element_text(size = 8.7))
+  theme(axis.text.x = element_text(size = 9.5))
 ggsave(filename=paste0(get_filepath("Figures"),"/2_DemographicDistribution.pdf"),width=9,height=6)
 
 # Calculate mean absolute difference in percentage points
@@ -342,22 +343,7 @@ DiffPP
 mean(DiffPP$Improvement)
 
 
-# Joined -----------------------------------------------------------------------  
-
-# Set up
-library(tidyverse)
-library(reshape2)
-library(AER)
-library(sandwich)
-library(multiwayvcov)
-library(data.table)
-library(hrbrthemes)
-library(extrafont)
-# font_import()
-# y
-fonts()
-#loadfonts()
-library(ggthemes)
+# Joined -----------------------------------------------------------------------
 
 PreprocessProfiles = function(profiles){
   profiles[,Saved := as.numeric(Saved)]
@@ -610,7 +596,7 @@ PlotAndSave = function(plotdata.main,isMainFig,filename,plotdata.util, .title = 
     labs(subtitle = .title) +
     theme_bw(base_line_size = 0.2)
   
-  ggsave(paste0(filename, ".png"), plot = gg, width = 9, height = 6)
+  ggsave(paste0(filename, ".pdf"), plot = gg, width = 9, height = 6)
   gg
 }
 
