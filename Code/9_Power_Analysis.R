@@ -72,11 +72,7 @@ add_power_curves = function(p, N, n0, rho, delta, sigma, color = "black", label 
   if (label) {
     p = p + 
       geom_line(aes(x = N, y = n, group = n0, color = factor(power)), data = df) + 
-      labs(title = "Finding the most powerful pair (n, N) for given budget", color = "Power") +
-      theme(
-        plot.title = element_text(size = 13.5), 
-        legend.title = element_text(size = 13)
-        ) + 
+      labs(title = "Finding the most powerful pair (n, N) for a given budget", color = "Power") +
       scale_color_manual(
         breaks = c(0.95,0.9,0.85,0.8), 
         values = c("#99000d","#a50f15","#de2d26","#fb6a4a")
@@ -92,18 +88,14 @@ cost_curve = function(N, n0, gamma) {
   n = (n0 - gamma*N)/(1+gamma)
 }
 
-add_cost_curves = function(p, N, n0, gamma, cost_Y, color = "darkred", label = FALSE) {
+add_cost_curves = function(p, N, n0, gamma, cost_Y, color = "black", label = FALSE) {
   df = expand_grid(N = N, n0 = n0) %>% 
     mutate(n = cost_curve(N, n0, gamma),
            cost = cost_Y*n0)
   if (label) {
     p = p + 
       geom_line(aes(x = N, y = n, group = n0, color = factor(cost)), data = df) + 
-      labs(title = "Finding the cheapest pair (n, N) for given statistical power", color = "Budget") +
-      theme(
-        plot.title = element_text(size = 13.5), 
-        legend.title = element_text(size = 13)
-      ) + 
+      labs(title = "Finding the cheapest pair (n, N) for a given statistical power", color = "Budget") +
       scale_color_manual(
         breaks = c(225,200,175,150), 
         values = c("#005a32","#006d2c","#238b45","#74c476")
@@ -135,9 +127,9 @@ n0_cost = optimal_pair[1]*(1 + gamma)+gamma * optimal_pair[2]
 N = seq(0, 1000, 10)
 
 pp = ggplot() %>% 
-  add_power_curves(N, n0_power, rho, delta, sigma, label=T) %>% 
-  add_cost_curves(N, n0_cost, gamma, cost_Y) +
-  annotate("point", x = optimal_pair[2], y = optimal_pair[1], shape = 4, size = 2.2, stroke = 0.7)
+  add_cost_curves(N, n0_cost, gamma, cost_Y) %>% 
+  add_power_curves(N, n0_power, rho, delta, sigma, label=T) +
+  annotate("point", x = optimal_pair[2], y = optimal_pair[1], shape = 4, size = 2.1, stroke = 0.65)
 pp
 
 
@@ -162,7 +154,7 @@ N = seq(0, 1000, 10)
 cp = ggplot() %>% 
   add_cost_curves(N, n0_cost, gamma, cost_Y, label = T) %>% 
   add_power_curves(N, n0_power, rho, delta, sigma) +
-  annotate("point", x = optimal_pair[2], y = optimal_pair[1], shape = 4, size = 2.2, stroke = 0.7) 
+  annotate("point", x = optimal_pair[2], y = optimal_pair[1], shape = 4, size = 2.1, stroke = 0.65) 
 cp
 
 
