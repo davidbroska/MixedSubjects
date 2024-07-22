@@ -15,18 +15,24 @@ df = read_csv("Data/5_SurveySampleLLM.csv.gz")
 corr_tab = df %>%
   pivot_longer(cols=matches(".Saved"), values_to="ModelSaved") %>% 
   group_by(name) %>% 
-  summarize(correlation = cor(Saved,ModelSaved,use = "complete.obs"), 
-            N = sum(!is.na(ModelSaved))/2) %>% 
-  mutate(Model = str_remove(name,"_.+"), 
-         Type = case_when(
-           str_detect(name, "wp_Saved$") ~  "Prediction", 
-           str_detect(name, "wp_Saved_2") ~ "Replicate 1", 
-           str_detect(name, "wp_Saved_3") ~ "Replicate 2", 
-           str_detect(name, "np_Saved") ~ "Without persona",
-           str_detect(name, "_mode") ~ "Mode across prediction and replicates") %>% 
-           factor(levels = c("Prediction","Replicate 1","Replicate 2","Mode across prediction and replicates","Without persona"))) %>% 
+  summarize(
+    correlation = cor(Saved,ModelSaved,use = "complete.obs"), 
+    N = sum(!is.na(ModelSaved))/2) %>% 
+  mutate(
+    Type = case_when(
+      str_detect(name, "wp_Saved$") ~  "Prediction", 
+      str_detect(name, "wp_Saved_2") ~ "Replicate 1", 
+      str_detect(name, "wp_Saved_3") ~ "Replicate 2", 
+      str_detect(name, "np_Saved") ~ "Without persona",
+      str_detect(name, "_mode") ~ "Mode across prediction and replicates") %>% 
+      factor(levels = c("Prediction","Replicate 1","Replicate 2","Mode across prediction and replicates","Without persona")), 
+    Model = case_when(
+      str_detect(name, "gpt35turbo0125") ~ "GPT3.5 Turbo",
+      str_detect(name, "gpt4o") ~ "GPT4o",
+      str_detect(name, "gpt4turbo") ~ "GPT4 Turbo"
+    ) %>% factor(levels = c("GPT4 Turbo","GPT4o","GPT3.5 Turbo"))) %>% 
   select(Model, Type, Correlation = correlation, N) %>% 
-  arrange(desc(Model), Type, desc(N))  
+  arrange(Model, Type, desc(N))  
 
 
 
