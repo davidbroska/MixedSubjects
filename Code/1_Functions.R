@@ -12,15 +12,16 @@ library(data.table)
 library(hrbrthemes)
 library(extrafont)
 library(ggthemes)
+library(kableExtra)
 
 
 # Define default theme for ggplot2
-custom_theme = theme_bw(base_family = "serif", base_size = 13) + 
+custom_theme = theme_bw(base_family = "serif", base_size = 12) + 
   theme(
     plot.title = element_text(size = 13), 
     legend.title = element_text(size = 12),
-    axis.text.x = element_text(size = 9.5),
-    axis.text.y = element_text(size = 9.5),
+    axis.text.x = element_text(size = 10),
+    axis.text.y = element_text(size = 10),
   ) 
 theme_set(custom_theme)
 

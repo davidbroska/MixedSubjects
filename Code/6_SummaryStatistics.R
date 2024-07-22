@@ -1,6 +1,5 @@
 # Load packages and custom functions
 source("Code/1_Functions.R")
-library(kableExtra)
 
 # Load data
 df = read_csv("Data/5_SurveySampleLLM.csv.gz")
