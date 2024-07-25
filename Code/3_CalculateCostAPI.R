@@ -190,22 +190,21 @@ ggsave(filename = "Figures/3_PercHumanSubjectsSaved.pdf", width=7, height=6)
 ###############################################################################
 
 title = bquote(paste("Cost of predicting a response as a\nshare of recruiting a human subject (", gamma, ")"))
-
-dd = expand.grid(rho = c(0.25, 0.5, 0.75),
-                 cf = seq(0.0002, 1, length.out = 100),
+rho = c(0.25, 0.5, 0.75)
+dd = expand.grid(rho = rho,
+                 cf = 1/seq(1, 500, lengt.out = 1000),
                  cY = 1) %>% 
   mutate(pcost = pcost(.cf = cf, .cY = cY, .rho = rho), 
          gamma = cf / cY, 
          gamma_formatted = paste0(100*gamma, "%"),
          is_sufficient = ifelse(rho > (2*sqrt(gamma)) / (1+gamma), 1, 0), 
-         pcost = ifelse(!is_sufficient, NA, pcost)
+         pcost = ifelse(!is_sufficient, 0, pcost)
   ) %>% 
   filter(!is.na(pcost))
 
 ggplot(dd, aes(1/gamma, 1-pcost, color = factor(rho), linetype = factor(rho))) +
   geom_line(linewidth = 0.9) +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
-  coord_fixed(ratio = 1/0.0002) +
   guides(
     color = guide_legend(title = bquote("PPI correlation "~tilde(rho))), 
     linetype = guide_legend(title = bquote("PPI correlation "~tilde(rho)))
