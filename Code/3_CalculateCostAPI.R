@@ -111,10 +111,10 @@ c1_human = 12 * 16/60                # $3.20
 c1_llm   = round(13*c1_gpt35,3)     # $0.002652 to $0.003
 
 # Function to calculate the percent saved when complementing human with silicon subjects
-pcost = function(.rho, .cX, .cf, .cY, .verbose=F){
+pcost = function(.rho, .cf, .cY, .verbose=F){
   
   # cost of silicon sampling as a share of sampling human responses
-  gamma = (.cX + .cf) / .cY
+  gamma =  .cf / .cY
   
   
   # check is rho sufficiently large
@@ -135,7 +135,7 @@ pcost = function(.rho, .cX, .cf, .cY, .verbose=F){
 }
 
 # % saved
-psaving = pcost(.rho=0.35, .cX=0, .cf=c1_llm, .cY=c1_human, .verbose = T)
+psaving = pcost(.rho=0.35, .cf=c1_llm, .cY=c1_human, .verbose = T)
 psaving
 
 # 165.63$ saved in a n=500 study
@@ -148,11 +148,10 @@ psaving
 
 
 dd = expand.grid(rho = seq(0,1,by=0.02),
-                 cX = 0,
                  cf = c(0.0001, 0.001, 0.01, 0.1),
                  cY = 1) %>% 
-  mutate(pcost = pcost(.cX = cX, .cf = cf, .cY = cY, .rho = rho), 
-         gamma = (cX + cf) / cY, 
+  mutate(pcost = pcost(.cf = cf, .cY = cY, .rho = rho), 
+         gamma = cf / cY, 
          gamma_formatted = paste0(100*gamma, "%"),
          is_sufficient = ifelse(rho > (2*sqrt(gamma)) / (1+gamma), 1, 0), 
          pcost = ifelse(!is_sufficient, NA, pcost)
@@ -182,6 +181,47 @@ ggplot(dd, aes(rho, pcost, color = gamma_formatted, linetype = gamma_formatted))
         legend.key.size = unit(2,"lines"), 
         legend.text = element_text(margin = margin(r = -3, unit = "pt"))) 
 ggsave(filename = "Figures/3_PercHumanSubjectsSaved.pdf", width=7, height=6)
+
+
+
+
+###############################################################################
+# PPI experiments are cheaper for cheaper algorithms and higher PPI correlation
+###############################################################################
+
+title = bquote(paste("Cost of predicting a response as a\nshare of recruiting a human subject (", gamma, ")"))
+
+dd = expand.grid(rho = c(0.25, 0.5, 0.75),
+                 cf = seq(0.0002, 1, length.out = 100),
+                 cY = 1) %>% 
+  mutate(pcost = pcost(.cf = cf, .cY = cY, .rho = rho), 
+         gamma = cf / cY, 
+         gamma_formatted = paste0(100*gamma, "%"),
+         is_sufficient = ifelse(rho > (2*sqrt(gamma)) / (1+gamma), 1, 0), 
+         pcost = ifelse(!is_sufficient, NA, pcost)
+  ) %>% 
+  filter(!is.na(pcost))
+
+ggplot(dd, aes(1/gamma, 1-pcost, color = factor(rho), linetype = factor(rho))) +
+  geom_line(linewidth = 0.9) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  coord_fixed(ratio = 1/0.0002) +
+  guides(
+    color = guide_legend(title = bquote("PPI correlation "~tilde(rho))), 
+    linetype = guide_legend(title = bquote("PPI correlation "~tilde(rho)))
+  ) +
+  scale_color_manual(
+    breaks = c(0.25,0.5,0.75), 
+    values = c("#A3CCE9FF","#5FA2CEFF","#1170AAFF")
+  ) +
+  labs(
+    x = bquote(1/gamma), 
+    y = "% of cost of a human subjects experiment"
+  ) +
+  theme(legend.position = "bottom",
+        legend.key.size = unit(2,"lines"), 
+        legend.text = element_text(margin = margin(r = -3, unit = "pt"))) 
+ggsave(filename = "Figures/3_PercentCostOfHumanSubjectsExperiment.pdf", width=7, height=6)
 
 
 
