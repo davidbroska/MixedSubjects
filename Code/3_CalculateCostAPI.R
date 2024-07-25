@@ -80,8 +80,26 @@ writeLines(paste0("Average cost: ",avg_c1,"$ for one API call."))
 ###########################
 # Calculate sample size
 ###########################
-# for one and two sided
 
+d = 0.1 # Cohen's d
+alpha = 0.05 # Level
+beta = 0.1 # 1 - power
+
+# Required sample size for one-sided test
+
+z_alpha = qnorm(alpha, lower.tail = F)
+z_beta = qnorm(1 - beta, lower.tail = F)
+n_one_sided = (z_alpha - z_beta)^2/d^2
+
+# Required sample size for two-sided test
+
+
+f = function(mu){pnorm(-qnorm(1-alpha/2), mu) + pnorm(qnorm(1-alpha/2), mu, lower.tail = FALSE) - 1 + beta}
+lower = 0
+upper = (qnorm(1-alpha/2) - qnorm(1-beta, lower.tail = FALSE))
+mu_star = uniroot(f, c(lower,upper))$root
+
+n_two_sided = (mu_star/d)^2
 
 
 ###########################
