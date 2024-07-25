@@ -20,8 +20,11 @@ custom_theme = theme_bw(base_family = "serif", base_size = 12) +
   theme(
     plot.title = element_text(size = 13), 
     legend.title = element_text(size = 12),
-    axis.text.x = element_text(size = 10),
-    axis.text.y = element_text(size = 10),
+    axis.title.x =  element_text(size = 12),
+    axis.title.y =  element_text(size = 12),
+    legend.text = element_text(size = 11),
+    axis.text.x = element_text(size = 11),
+    axis.text.y = element_text(size = 11),
   ) 
 theme_set(custom_theme)
 

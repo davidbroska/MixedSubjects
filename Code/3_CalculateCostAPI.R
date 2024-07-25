@@ -77,7 +77,10 @@ writeLines(paste0("Average cost: ",avg_c1,"$ for one API call."))
 # gpt-4o: 0.00204$ for one API call.
 
 
-
+###########################
+# Calculate sample size
+###########################
+# for one and two sided
 
 
 
@@ -126,36 +129,40 @@ psaving
 ############################################
 
 
-dd = expand.grid(rho = seq(0,1,by=0.025),
+dd = expand.grid(rho = seq(0,1,by=0.02),
                  cX = 0,
                  cf = c(0.0001, 0.001, 0.01, 0.1),
                  cY = 1) %>% 
-  mutate(pcost = 100 * pcost(.cX = cX, .cf = cf, .cY = cY, .rho = rho), 
+  mutate(pcost = pcost(.cX = cX, .cf = cf, .cY = cY, .rho = rho), 
          gamma = (cX + cf) / cY, 
          gamma_formatted = paste0(100*gamma, "%"),
          is_sufficient = ifelse(rho > (2*sqrt(gamma)) / (1+gamma), 1, 0), 
          pcost = ifelse(!is_sufficient, NA, pcost)
-  ) 
+  ) %>% 
+  filter(!is.na(pcost))
 
 colors = tribble(
   ~Variable,   ~Code,        ~Label,   
-  "0.01%",     "#57606CFF",  "0.01%", 
-  "0.1%",      "#1170AAFF",  "0.1%",  
-  "1%",        "#5FA2CEFF",  "1%",     
-  "10%",       "#A3CCE9FF",  "10%",    
+  "0.01%",     "#74c476",  "0.01%", 
+  "0.1%",      "#238b45",  "0.1%",  
+  "1%",        "#006d2c",  "1%",     
+  "10%",       "#005a32",  "10%",    
 )
 
-title = expression(paste("Cost of predicting a response as a\nshare of recruiting a human subject (", gamma, ")"))
+title = bquote(paste("Cost of predicting a response as a\nshare of recruiting a human subject (", gamma, ")"))
 
 ggplot(dd, aes(rho, pcost, color = gamma_formatted, linetype = gamma_formatted)) + 
-  geom_line() +
-  theme(legend.position = "bottom") + 
+  geom_line(linewidth = 0.9) +
   scale_color_manual(values = colors$Code, breaks = colors$Variable, labels = colors$Label) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   labs(x = bquote(tilde(rho)), 
        y = "% of cost of recruiting human subjects saved") +
   guides(color = guide_legend(title = title), 
          linetype = guide_legend(title = title)) +
-  theme(panel.grid.major = element_line(size = 0.2), panel.grid.minor = element_line(size = 0.1))
+  coord_fixed(ratio = 1) +
+  theme(legend.position = "bottom",
+        legend.key.size = unit(2,"lines"), 
+        legend.text = element_text(margin = margin(r = -3, unit = "pt"))) 
 ggsave(filename = "Figures/3_PercHumanSubjectsSaved.pdf", width=7, height=6)
 
 

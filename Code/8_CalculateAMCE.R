@@ -139,12 +139,12 @@ example_ratio =  round(100 * p_of_classic_ci_ratio(rho=0.75, k=4), 1)
 
 # Plot ratio of sample sizes k against ratio of CI widths
 ggplot(plotdata, aes(x = k, y = p_of_classic_ci, color = factor(rho))) +
-  geom_line(linewidth=1) +
+  geom_line(linewidth = 0.9) +
   scale_y_continuous(breaks = seq(0,1, by=0.05)) +
   theme(legend.position = "bottom") +
   scale_color_manual(
     breaks = c(0.25,0.5,0.75), 
-    values = c("#CC6677","#DDCC77","#4477AA")
+    values = c("#A3CCE9FF","#5FA2CEFF","#1170AAFF")
   ) +
   labs(
     x = "Number of predictions N / gold-standard observations n",
@@ -152,7 +152,6 @@ ggplot(plotdata, aes(x = k, y = p_of_classic_ci, color = factor(rho))) +
     color = bquote(tilde(rho))
   )
 ggsave("Figures/8_WidthAsShareOfClassicCIWidth_ratio.pdf", width=7, height=6)
-
 
 
 
