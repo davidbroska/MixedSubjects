@@ -185,14 +185,74 @@ ggsave(filename = "Figures/3_PercHumanSubjectsSaved.pdf", width=7, height=6)
 
 
 
+
+
+#############################################################
+# Plot theoretical ratio of PPI CI width against classical CI
+#############################################################
+
+# Define function that calculates the ratio of PPI CI to classical CI width
+p_of_classic_ci_ratio = function(rho, k) {
+  # Define k as the ratio k = N/n
+  # Then N/(N+n) = k/(1+k)
+  
+  # Ratio of PPI CI width to classical CI width 
+  sqrt(1 - (k / (1+k)) * rho^2)
+  
+}
+
+# Create dataset with example values for rho 
+plotdata = expand.grid(
+  rho = c(0.1, 0.3, 0.5, 0.7, 0.9), 
+  k = seq(0, 10, by=0.1)
+) %>% 
+  mutate(p_of_classic_ci = p_of_classic_ci_ratio(rho=rho, k=k))
+
+# Example from article
+example_ratio =  round(100 * p_of_classic_ci_ratio(rho=0.75, k=4), 1)
+100 - example_ratio
+
+# Plot ratio of sample sizes k against ratio of CI widths
+ggplot(plotdata, aes(x = k, y = p_of_classic_ci, color = factor(rho), linetype= factor(rho))) +
+  geom_line(linewidth = 0.9) +
+  scale_x_continuous(
+    breaks = seq(0, 10, by=1)
+  ) +
+  scale_y_continuous(
+    labels = scales::percent_format(accuracy = 1), 
+    breaks = seq(0, 1, by=0.1)
+  ) +
+  scale_color_manual(
+    breaks = c(0.1, 0.3, 0.5, 0.7, 0.9),
+    values = c("#c7e9b4","#7fcdbb","#41b6c4","#2c7fb8","#253494")
+  ) +
+  labs(
+    x = "Number of predictions for every gold-standard observation N/n",
+    y = "PPI SE as percentage of classical SE"
+  ) +
+  guides(
+    color = guide_legend(title = bquote("PPI correlation "~tilde(rho))), 
+    linetype = guide_legend(title = bquote("PPI correlation "~tilde(rho)))
+  ) +
+  theme(
+    legend.position = "right",
+    legend.key.size = unit(4,"lines"), 
+    legend.key.height = unit(2, "lines")
+  ) 
+ggsave("Figures/3_SeAsPercentageOfShareOfClassicSe.pdf", width=7, height=5)
+
+
+
+
+
 ###############################################################################
 # PPI experiments are cheaper for cheaper algorithms and higher PPI correlation
 ###############################################################################
 
 title = bquote(paste("Cost of predicting a response as a\nshare of recruiting a human subject (", gamma, ")"))
 
-dd = expand.grid(rho = c(0.25, 0.5, 0.75),
-                 cf = 1/seq(1, 500, length.out = 1000),
+dd = expand.grid(rho = c(0.1, 0.3, 0.5, 0.7, 0.9),
+                 cf = 1/seq(1, 500, length.out = 200),
                  cY = 1) %>% 
   mutate(pcost = pcost(.cf = cf, .cY = cY, .rho = rho), 
          gamma = cf / cY, 
@@ -206,24 +266,26 @@ ggplot(dd, aes(1/gamma, 1-pcost, color = factor(rho), linetype = factor(rho))) +
   geom_line(linewidth = 0.9) +
   scale_y_continuous(
     labels = scales::percent_format(accuracy = 1), 
-    breaks = seq(0,1, by=0.05)
+    breaks = seq(0,1, by=0.1)
   ) +
   guides(
     color = guide_legend(title = bquote("PPI correlation "~tilde(rho))), 
     linetype = guide_legend(title = bquote("PPI correlation "~tilde(rho)))
   ) +
   scale_color_manual(
-    breaks = c(0.25,0.5,0.75), 
-    values = c("#A3CCE9FF","#5FA2CEFF","#1170AAFF")
+    breaks = c(0.1, 0.3, 0.5, 0.7, 0.9),
+    values = c("#c7e9b4","#7fcdbb","#41b6c4","#2c7fb8","#253494")
   ) +
   labs(
     x = bquote("Silicon subjects affordable per human subject "~1/gamma), 
     y = "Cost of PPI as % of classical experiment"
   ) +
-  theme(legend.position = "bottom",
-        legend.key.size = unit(2,"lines"), 
-        legend.text = element_text(margin = margin(r = -3, unit = "pt"))) 
-ggsave(filename = "Figures/3_PercentCostOfHumanSubjectsExperiment.pdf", width=7, height=6)
+  theme(
+    legend.position = "right",
+    legend.key.size = unit(4,"lines"), 
+    legend.key.height = unit(2, "lines")
+  ) 
+ggsave(filename = "Figures/3_PercentCostOfHumanSubjectsExperiment.pdf", width=7, height=5)
 
 
 

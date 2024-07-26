@@ -111,57 +111,6 @@ ggsave(filename="Figures/8_AMCEs.pdf",width=7,height=5)
 
 
 
-
-#############################################################
-# Plot theoretical ratio of PPI CI width against classical CI
-#############################################################
-
-# Define function that calculates the ratio of PPI CI to classical CI width
-p_of_classic_ci_ratio = function(rho, k) {
-  # Define k as the ratio k = N/n
-  # Then N/(N+n) = k/(1+k)
-  
-  # Ratio of PPI CI width to classical CI width 
-  sqrt(1 - (k / (1+k)) * rho^2)
-  
-}
-
-# Create dataset with example values for rho 
-plotdata = expand.grid(
-  rho = c(0.25, 0.5, 0.75), 
-  k = seq(0, 5, by=0.1)
-) %>% 
-  mutate(p_of_classic_ci = p_of_classic_ci_ratio(rho=rho, k=k))
-
-# Example from article
-example_ratio =  round(100 * p_of_classic_ci_ratio(rho=0.75, k=4), 1)
-100 - example_ratio
-
-# Plot ratio of sample sizes k against ratio of CI widths
-ggplot(plotdata, aes(x = k, y = p_of_classic_ci, color = factor(rho), linetype= factor(rho))) +
-  geom_line(linewidth = 0.9) +
-  scale_y_continuous(
-    labels = scales::percent_format(accuracy = 1), 
-    breaks = seq(0, 1, by=0.05)
-  ) +
-  scale_color_manual(
-    breaks = c(0.25,0.5,0.75), 
-    values = c("#A3CCE9FF","#5FA2CEFF","#1170AAFF")
-  ) +
-  labs(
-    x = "Number of predictions for every gold-standard observation N/n",
-    y = "PPI SE as percentage of classical SE"
-  ) +
-  guides(
-    color = guide_legend(title = bquote("PPI correlation "~tilde(rho))), 
-    linetype = guide_legend(title = bquote("PPI correlation "~tilde(rho)))
-  ) +
-  theme(legend.position = "bottom",
-        legend.key.size = unit(2,"lines"), 
-        legend.text = element_text(margin = margin(r = -3, unit = "pt"))) 
-ggsave("Figures/8_WidthAsShareOfClassicCIWidth_ratio.pdf", width=7, height=6)
-
-
 ###############################################################
 # Compare AMCE estimate from PPI with WLS in Moral Machine Data
 ###############################################################
