@@ -13,6 +13,7 @@ library(hrbrthemes)
 library(extrafont)
 library(ggthemes)
 library(kableExtra)
+library(scales)
 
 
 # Define default theme for ggplot2

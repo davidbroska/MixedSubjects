@@ -190,9 +190,9 @@ ggsave(filename = "Figures/3_PercHumanSubjectsSaved.pdf", width=7, height=6)
 ###############################################################################
 
 title = bquote(paste("Cost of predicting a response as a\nshare of recruiting a human subject (", gamma, ")"))
-rho = c(0.25, 0.5, 0.75)
-dd = expand.grid(rho = rho,
-                 cf = 1/seq(1, 500, lengt.out = 1000),
+
+dd = expand.grid(rho = c(0.25, 0.5, 0.75),
+                 cf = 1/seq(1, 500, length.out = 1000),
                  cY = 1) %>% 
   mutate(pcost = pcost(.cf = cf, .cY = cY, .rho = rho), 
          gamma = cf / cY, 
@@ -204,7 +204,10 @@ dd = expand.grid(rho = rho,
 
 ggplot(dd, aes(1/gamma, 1-pcost, color = factor(rho), linetype = factor(rho))) +
   geom_line(linewidth = 0.9) +
-  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  scale_y_continuous(
+    labels = scales::percent_format(accuracy = 1), 
+    breaks = seq(0,1, by=0.05)
+  ) +
   guides(
     color = guide_legend(title = bquote("PPI correlation "~tilde(rho))), 
     linetype = guide_legend(title = bquote("PPI correlation "~tilde(rho)))
@@ -214,8 +217,8 @@ ggplot(dd, aes(1/gamma, 1-pcost, color = factor(rho), linetype = factor(rho))) +
     values = c("#A3CCE9FF","#5FA2CEFF","#1170AAFF")
   ) +
   labs(
-    x = bquote(1/gamma), 
-    y = "% of cost of a human subjects experiment"
+    x = bquote("Silicon subjects affordable per human subject "~1/gamma), 
+    y = "Cost of PPI as % of classical experiment"
   ) +
   theme(legend.position = "bottom",
         legend.key.size = unit(2,"lines"), 
