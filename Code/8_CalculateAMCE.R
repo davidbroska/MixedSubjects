@@ -172,7 +172,7 @@ plot_results_ratio = function(.predictors, .n, .Nmax, .model, .rhos){
     mutate(rho = format_digit(rho))
   
   asize = 3
-  xnudge = 5.23
+  xnudge = .Nmax/.n + .23
   
   add_labs = function(.plot, .var, .ynudge=0){
     
@@ -197,6 +197,7 @@ plot_results_ratio = function(.predictors, .n, .Nmax, .model, .rhos){
     labs(linetype="Language Model", y = "PPI CI width as % of classical CI",
          color="Independent variable", x = "Number of predictions for every gold-standard observation N/n") +
     scale_color_manual(breaks = colors$Variable, values = colors$Code, labels = colors$Label) +
+    scale_x_continuous(breaks = seq(0, .Nmax/.n, 1)) +
     scale_y_continuous(
       labels = scales::percent_format(accuracy = 1, scale = 100), 
       breaks = seq(0,1,0.01)
@@ -224,6 +225,7 @@ plot_results_ratio = function(.predictors, .n, .Nmax, .model, .rhos){
              str_extract("ppi|pooled")) %>% 
     ggplot(aes(ratio_N_n, coverage, color=x,linetype=method)) + 
     geom_line() +
+    scale_x_continuous(breaks = seq(0, .Nmax/.n, 1)) +
     scale_y_continuous(
       labels = scales::percent_format(accuracy = 1, scale = 1), 
       limits = c(0,100)
@@ -253,12 +255,12 @@ plot_results_ratio = function(.predictors, .n, .Nmax, .model, .rhos){
 models = unique(dfsim_w$y)
 models = "gpt4turbo_wp_Saved"
 Xs = unique(dfsim_w$x)
-ns = c(100,500)
+ns = c(100,200)
 for (n in seq_along(ns)) {
   for (i in seq_along(models)){
     plot_results_ratio(.predictors = Xs, 
                        .n = ns[n], 
-                       .Nmax = ns[n] * 5,
+                       .Nmax = ns[n] * 10,
                        .model = models[i], 
                        .rhos = rhos)
   }
