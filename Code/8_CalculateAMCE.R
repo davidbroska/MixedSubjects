@@ -80,7 +80,7 @@ cols = tribble(
   "gpt4turbo_wp_Saved",      "#223c56", "GPT-4 Turbo ",
   "gpt4o_wp_Saved",          "#4477AA", "GPT-4o ", 
   "gpt35turbo0125_wp_Saved", "#9fbcd9", "GPT-3.5 Turbo ",
-  "Saved",                   "#DDCC77", " \nStratified Moral\nMachine Sample\n ",
+  "Saved",                   "#DDCC77", " \nMachine Machine\nQuota Sample\n ",
   "Awad2018",                "#CC6677", " \nAwad et al.\n(2018)\n "
   ) %>%  
 mutate(dv = factor(dv,ordered = T))
@@ -101,10 +101,26 @@ amces = main.Saved %>%
 # Create bar plot with AMCEs and 95% CIs
 ggplot(amces, aes(x=amce, y=label, xmin=conf.low, xmax=conf.high, fill=dv)) + 
   geom_col(position=position_dodge(width=0.8)) +
-  geom_errorbar(position=position_dodge(width=0.8), width=.2, color="darkgrey") +
-  scale_fill_manual(breaks=cols$dv, values=cols$Color, labels=cols$Label) + 
-  labs(fill = "Dataset",x="AMCE with 95% confidence intervals", y="Attribute of Scenario") +
-  theme(axis.text.y = element_text(size = 8.7))
+  geom_errorbar(
+    position=position_dodge(width=0.8),
+    width=.2, 
+    color="darkgrey"
+  ) +
+  scale_fill_manual(
+    breaks=cols$dv,
+    values=cols$Color, 
+    labels=cols$Label
+  ) + 
+  labs(
+    fill = "Dataset",
+    x="AMCE with 95% confidence intervals", 
+    y="Attribute of Scenario"
+  ) +
+  theme(
+    axis.text.y = element_text(size = 9),
+    axis.title.x = element_text(size = 11),
+    axis.title.y = element_text(size = 11),
+    legend.text = element_text(size = 9))
 
 ggsave(filename="Figures/8_AMCEs.pdf",width=7,height=5)
 
@@ -171,8 +187,8 @@ plot_results_ratio = function(.predictors, .n, .Nmax, .model, .rhos){
     left_join(.rhos, by = c("x","y")) %>% 
     mutate(rho = format_digit(rho))
   
-  asize = 3
-  xnudge = .Nmax/.n + .23
+  asize = 2.85
+  xnudge = .Nmax/.n + .475
   
   add_labs = function(.plot, .var, .ynudge=0){
     
@@ -197,37 +213,43 @@ plot_results_ratio = function(.predictors, .n, .Nmax, .model, .rhos){
     labs(linetype="Language Model", y = "PPI CI width as % of classical CI",
          color="Independent variable", x = "Number of predictions for every gold-standard observation N/n") +
     scale_color_manual(breaks = colors$Variable, values = colors$Code, labels = colors$Label) +
-    scale_x_continuous(breaks = seq(0, .Nmax/.n, 1)) +
+    scale_x_continuous(
+      breaks = seq(0, .Nmax/.n, 1), 
+      limits = c(0,10.5)
+    ) +
     scale_y_continuous(
       labels = scales::percent_format(accuracy = 1, scale = 100), 
       breaks = seq(0,1,0.01)
     ) + 
     theme(
       legend.key.height = unit(0.75, "cm"), 
-      panel.grid.major = element_line(size = 0.2),  
-      panel.grid.minor = element_line(size = 0.1)) 
+      panel.grid.major = element_line(linewidth = 0.2),  
+      panel.grid.minor = element_line(linewidth = 0.1)
+    ) 
   
   p1 = p1 %>% 
-    add_labs("Age",.ynudge = -0.001) %>% 
+    add_labs("Utilitarian",.ynudge = 0.002) %>%  
+    add_labs("Age",.ynudge = -0.002) %>% 
     add_labs("Barrier",.ynudge = -0.0005) %>% 
-    add_labs("CrossingSignal",.ynudge = -0.0015) %>% 
+    add_labs("CrossingSignal", .ynudge = 0.0009) %>% 
     add_labs("Fitness") %>% 
-    add_labs("Gender", .ynudge = 0.001) %>% 
+    add_labs("Gender", .ynudge = 0.0005) %>% 
     add_labs("Intervention") %>% 
-    add_labs("Species") %>% 
-    add_labs("Utilitarian",.ynudge = 0.0005) 
+    add_labs("Species") 
   
   # plot percentage of time CIs cover best parameter estimate for increasing N
   p2 = dd %>% 
-    #pivot_longer(cols = c(coverage_ppi,coverage_pooled),values_to="coverage",names_to="method") %>% 
     pivot_longer(cols = c(overlap_ppi,overlap_pooled),values_to="coverage",names_to="method") %>% 
-    mutate(method = method %>% 
-             str_extract("ppi|pooled")) %>% 
-    ggplot(aes(ratio_N_n, coverage, color=x,linetype=method)) + 
+    mutate(method = method %>% str_extract("ppi|pooled")) %>% 
+    ggplot(aes(ratio_N_n, coverage, color=x, linetype=method)) + 
     geom_line() +
-    scale_x_continuous(breaks = seq(0, .Nmax/.n, 1)) +
+    scale_x_continuous(
+      breaks = seq(0, .Nmax/.n, 1), 
+      limits = c(0,10.5)
+    ) +
     scale_y_continuous(
       labels = scales::percent_format(accuracy = 1, scale = 1), 
+      breaks = c(0,20,40,60,80,100),
       limits = c(0,100)
     ) + 
     labs(x = "Number of predictions for every gold-standard observation N/n", color="Method", 
@@ -238,7 +260,11 @@ plot_results_ratio = function(.predictors, .n, .Nmax, .model, .rhos){
       breaks=c("ppi","pooled"), 
       labels=c("\nPrediction-powered\ninference (PPI)\n","\nRegression on\npooled sample\n"), 
       values=c("dashed","solid")) +
-    theme(panel.grid.major = element_line(size = 0.2), panel.grid.minor = element_line(size = 0.1)) +
+    theme(
+      panel.grid.major = element_line(size = 0.2), 
+      panel.grid.minor = element_line(size = 0.1),
+      legend.key.width = unit(1.25, "cm")  
+    ) + 
     annotate("text",label= " ", parse=T, x=xnudge, y=filter(r,x=="Age")$ratio_ols_ppi_ci,size=asize)
   
   

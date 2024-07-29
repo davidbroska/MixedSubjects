@@ -277,8 +277,8 @@ ggplot(dd, aes(1/gamma, 1-pcost, color = factor(rho), linetype = factor(rho))) +
     values = c("#c7e9b4","#7fcdbb","#41b6c4","#2c7fb8","#253494")
   ) +
   labs(
-    x = bquote("Silicon subjects affordable per human subject "~1/gamma), 
-    y = "Cost of PPI as % of classical experiment"
+    x = bquote("Predictions affordable for every gold-standard observation"~1/gamma), 
+    y = "Cost of PPI experiment as % of classical experiment"
   ) +
   theme(
     legend.position = "right",

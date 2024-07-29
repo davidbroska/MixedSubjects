@@ -160,7 +160,7 @@ nrow(profiles.S) / 10^6
 
 
 ################################################################################
-# Stratified sample ------------------------------------------------------------
+# Quota sample ------------------------------------------------------------
 ################################################################################
 
 
@@ -302,7 +302,7 @@ IncomeFreq = compute_dem_share(IncomeBracketSmall,IncomeBracketSmall)
 # Create bar plot
 cols = tribble(
   ~var,     ~col,      ~lab, 
-  "mmsFreq",  "#DDCC77", " Stratified Moral Machine Sample ",
+  "mmsFreq",  "#DDCC77", " Moral Machine Quota Sample ",
   "acsFreq",  "#CC6677", " American Community Survey ",
   "mmFreq",   "#4477AA", " Moral Machine Convenience Sample ") %>% 
   mutate(lab = str_replace_all(lab," ","\n"),
@@ -323,11 +323,11 @@ FreqLong = FreqWide %>%
 
 FreqLong %>% 
   ggplot(aes(Level, value, fill=name)) +
-  geom_col(position = position_dodge(),width=0.5) +
+  geom_col(position = position_dodge(), width=0.5) +
   facet_wrap(~ Variable, scales = "free_x",
              labeller = labeller(Variable=labell)) +
   scale_fill_manual(breaks = cols$var, values = cols$col,labels=cols$lab) +
-  labs(fill = "Dataset",x="Level of variable",y="Relative frequency") +
+  labs(fill = "Dataset",x="",y="Relative frequency") +
   theme(axis.text.x = element_text(size = 9.5))
 ggsave(filename=paste0(get_filepath("Figures"),"/2_DemographicDistribution.pdf"),width=9,height=6)
 
@@ -601,10 +601,6 @@ PlotAndSave = function(plotdata.main,isMainFig,filename,plotdata.util, .title = 
 }
 
 
-
-
-
-
 computeACME = function(.profiles,.depvar){
   
   profiles = PreprocessProfiles(.profiles)
@@ -628,7 +624,7 @@ computeACME = function(.profiles,.depvar){
 Saved = computeACME(data.table(mms),"Saved")
 Saved
 ptitle = paste0("Human respondents (",length(unique(mms$UserID))," US respondents, ", length(unique(mms$ResponseID))," Decisions)")
-pSaved = PlotAndSave(Saved$main, T, paste0(get_filepath("Figures"),"/2_AMCE_StratifiedSample"), Saved$util,ptitle)
+pSaved = PlotAndSave(Saved$main, T, paste0(get_filepath("Figures"),"/2_AMCE_QuotaSample"), Saved$util,ptitle)
 pSaved
 
 
