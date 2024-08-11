@@ -80,7 +80,7 @@ cols = tribble(
   "gpt4turbo_wp_Saved",      "#223c56", "GPT-4 Turbo ",
   "gpt4o_wp_Saved",          "#4477AA", "GPT-4o ", 
   "gpt35turbo0125_wp_Saved", "#9fbcd9", "GPT-3.5 Turbo ",
-  "Saved",                   "#DDCC77", " \nMachine Machine\nQuota Sample\n ",
+  "Saved",                   "#DDCC77", " \nMoral Machine\nQuota Sample\n ",
   "Awad2018",                "#CC6677", " \nAwad et al.\n(2018)\n "
   ) %>%  
 mutate(dv = factor(dv,ordered = T))
@@ -142,8 +142,7 @@ dfsim = read_csv("Data/7_ResultsPPI.csv.gz") %>%
          ppi_over_amce_ci = (conf.low <= conf_high_ppi) * (conf.high >= conf_low_ppi),
          pooled_over_amce_ci = (conf.low <= conf_high_pooled) * (conf.high >= conf_low_pooled),
          width_ppi_ci = conf_high_ppi - conf_low_ppi,
-         width_pooled_ci = conf_high_pooled - conf_low_pooled, 
-         width_ols_ci = conf_high_ols - conf_low_ols)
+         width_pooled_ci = conf_high_human - conf_low_human)
 
 # NA values
 summarise(dfsim, across(everything(), ~ sum(is.na(.))))
@@ -157,8 +156,7 @@ dfsim_w = dfsim %>%
             overlap_pooled = 100 * (sum(pooled_over_amce_ci==1) / sum(pooled_over_amce_ci %in% 0:1)),
             mean_width_ppi_ci = mean(width_ppi_ci,na.rm=T), 
             mean_width_pooled_ci = mean(width_pooled_ci,na.rm=T), 
-            mean_width_ols_ci = mean(width_pooled_ci,na.rm=T), 
-            mean_width_ols_ci = mean(width_ols_ci, na.rm=T)) %>% 
+            mean_width_ols_ci = mean(width_pooled_ci,na.rm=T)) %>% 
   mutate(ratio_ols_ppi_ci =  mean_width_ppi_ci / mean_width_ols_ci, 
          ratio_N_n = N/n)
 
@@ -218,9 +216,9 @@ plot_results_ratio = function(.predictors, .n, .Nmax, .model, .rhos){
       limits = c(0,10.5)
     ) +
     scale_y_continuous(
-      labels = scales::percent_format(accuracy = 1, scale = 100), 
+      labels = scales::percent_format(accuracy = 1, scale = 100),
       breaks = seq(0,1,0.01)
-    ) + 
+    ) +
     theme(
       legend.key.height = unit(0.75, "cm"), 
       panel.grid.major = element_line(linewidth = 0.2),  
@@ -228,8 +226,8 @@ plot_results_ratio = function(.predictors, .n, .Nmax, .model, .rhos){
     ) 
   
   p1 = p1 %>% 
-    add_labs("Utilitarian",.ynudge = 0.002) %>%  
-    add_labs("Age",.ynudge = -0.002) %>% 
+    add_labs("Utilitarian",.ynudge = 0.001) %>%  
+    add_labs("Age",.ynudge = -0.001) %>% 
     add_labs("Barrier",.ynudge = -0.0005) %>% 
     add_labs("CrossingSignal", .ynudge = 0.0009) %>% 
     add_labs("Fitness") %>% 
@@ -261,8 +259,8 @@ plot_results_ratio = function(.predictors, .n, .Nmax, .model, .rhos){
       labels=c("\nPrediction-powered\ninference (PPI)\n","\nRegression on\npooled sample\n"), 
       values=c("dashed","solid")) +
     theme(
-      panel.grid.major = element_line(size = 0.2), 
-      panel.grid.minor = element_line(size = 0.1),
+      panel.grid.major = element_line(linewidth = 0.2), 
+      panel.grid.minor = element_line(linewidth = 0.1),
       legend.key.width = unit(1.25, "cm")  
     ) + 
     annotate("text",label= " ", parse=T, x=xnudge, y=filter(r,x=="Age")$ratio_ols_ppi_ci,size=asize)
@@ -281,7 +279,7 @@ plot_results_ratio = function(.predictors, .n, .Nmax, .model, .rhos){
 models = unique(dfsim_w$y)
 models = "gpt4turbo_wp_Saved"
 Xs = unique(dfsim_w$x)
-ns = c(100,200)
+ns = c(100,200,300,500)
 for (n in seq_along(ns)) {
   for (i in seq_along(models)){
     plot_results_ratio(.predictors = Xs, 
