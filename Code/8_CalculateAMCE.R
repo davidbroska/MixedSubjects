@@ -142,7 +142,8 @@ dfsim = read_csv("Data/7_ResultsPPI.csv.gz") %>%
          ppi_over_amce_ci = (conf.low <= conf_high_ppi) * (conf.high >= conf_low_ppi),
          pooled_over_amce_ci = (conf.low <= conf_high_pooled) * (conf.high >= conf_low_pooled),
          width_ppi_ci = conf_high_ppi - conf_low_ppi,
-         width_pooled_ci = conf_high_human - conf_low_human)
+         width_pooled_ci = conf_high_pooled - conf_low_pooled, 
+         width_ols_ci = conf_high_ols - conf_low_ols)
 
 # NA values
 summarise(dfsim, across(everything(), ~ sum(is.na(.))))
@@ -156,9 +157,10 @@ dfsim_w = dfsim %>%
             overlap_pooled = 100 * (sum(pooled_over_amce_ci==1) / sum(pooled_over_amce_ci %in% 0:1)),
             mean_width_ppi_ci = mean(width_ppi_ci,na.rm=T), 
             mean_width_pooled_ci = mean(width_pooled_ci,na.rm=T), 
-            mean_width_ols_ci = mean(width_pooled_ci,na.rm=T)) %>% 
+            mean_width_ols_ci = mean(width_pooled_ci,na.rm=T), 
+            mean_width_ols_ci = mean(width_ols_ci, na.rm=T)) %>% 
   mutate(ratio_ols_ppi_ci =  mean_width_ppi_ci / mean_width_ols_ci, 
-         ratio_N_n = N/n)
+         ratio_N_n = N/n) 
 
 
 
@@ -185,8 +187,8 @@ plot_results_ratio = function(.predictors, .n, .Nmax, .model, .rhos){
     left_join(.rhos, by = c("x","y")) %>% 
     mutate(rho = format_digit(rho))
   
-  asize = 2.85
-  xnudge = .Nmax/.n + .475
+  asize = 3.65
+  xnudge = .Nmax/.n + .383
   
   add_labs = function(.plot, .var, .ynudge=0){
     
@@ -213,7 +215,7 @@ plot_results_ratio = function(.predictors, .n, .Nmax, .model, .rhos){
     scale_color_manual(breaks = colors$Variable, values = colors$Code, labels = colors$Label) +
     scale_x_continuous(
       breaks = seq(0, .Nmax/.n, 1), 
-      limits = c(0,10.5)
+      limits = c(0,5.5)
     ) +
     scale_y_continuous(
       labels = scales::percent_format(accuracy = 1, scale = 100),
@@ -226,14 +228,14 @@ plot_results_ratio = function(.predictors, .n, .Nmax, .model, .rhos){
     ) 
   
   p1 = p1 %>% 
-    add_labs("Utilitarian",.ynudge = 0.001) %>%  
-    add_labs("Age",.ynudge = -0.001) %>% 
-    add_labs("Barrier",.ynudge = -0.0005) %>% 
-    add_labs("CrossingSignal", .ynudge = 0.0009) %>% 
-    add_labs("Fitness") %>% 
-    add_labs("Gender", .ynudge = 0.0005) %>% 
-    add_labs("Intervention") %>% 
-    add_labs("Species") 
+    add_labs("Species") %>% 
+    add_labs("Utilitarian",.ynudge = 0.0005) %>%  
+    add_labs("Age",.ynudge = -0.0005) %>% 
+    add_labs("Gender", .ynudge = 0.00085) %>% 
+    add_labs("CrossingSignal", .ynudge = -0.0012) %>% 
+    add_labs("Fitness", .ynudge = 0.001) %>% 
+    add_labs("Barrier",.ynudge = -0.0006) %>% 
+    add_labs("Intervention")  
   
   # plot percentage of time CIs cover best parameter estimate for increasing N
   p2 = dd %>% 
@@ -243,7 +245,7 @@ plot_results_ratio = function(.predictors, .n, .Nmax, .model, .rhos){
     geom_line() +
     scale_x_continuous(
       breaks = seq(0, .Nmax/.n, 1), 
-      limits = c(0,10.5)
+      limits = c(0,5.5)
     ) +
     scale_y_continuous(
       labels = scales::percent_format(accuracy = 1, scale = 1), 
@@ -284,7 +286,7 @@ for (n in seq_along(ns)) {
   for (i in seq_along(models)){
     plot_results_ratio(.predictors = Xs, 
                        .n = ns[n], 
-                       .Nmax = ns[n] * 10,
+                       .Nmax = ns[n] * 5,
                        .model = models[i], 
                        .rhos = rhos)
   }
