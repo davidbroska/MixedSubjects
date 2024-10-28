@@ -107,3 +107,9 @@ summarize(df,across(matches("wp_Saved"), ~sum(is.na(.))))
 
 # Save file with predictions from LLMs
 write_csv(df,"Data/5_SurveySampleLLM.csv.gz")
+
+# Save file for ppi_py example with a subset of columns
+ppipy_df = df %>% 
+  select(ExtendedSessionID:gpt4turbo_wp_Saved)
+
+write_csv(df,"Data/5_SurveySampleLLM_ppipy.csv.gz")
