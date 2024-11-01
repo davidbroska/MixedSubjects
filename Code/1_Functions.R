@@ -14,6 +14,7 @@ library(extrafont)
 library(ggthemes)
 library(kableExtra)
 library(scales)
+library(patchwork)
 
 
 # Define default theme for ggplot2
