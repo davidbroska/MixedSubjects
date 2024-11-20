@@ -4,7 +4,11 @@ source("Code/1_Functions.R")
 # Load data
 df = read_csv("Data/5_SurveySampleLLM.csv.gz") 
 
+dd = df %>% filter(!is.na(gpt4turbo_wp_Saved_4)) %>% select(ResponseID, Saved, gpt4turbo_wp_Saved_4, Review_age) %>% 
+  mutate(error = abs(Saved- gpt4turbo_wp_Saved_4))
+View(dd)
 
+# if dem, then take frist row and cluster on userid 
 
 ####################
 # Summary statistics
