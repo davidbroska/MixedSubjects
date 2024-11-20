@@ -40,13 +40,12 @@ optimal_n_N = function(n0, rho, gamma){
   return(pair)
 }
 
-cheapest_pair = function(delta, sigma, rho, gamma, beta, alpha = 0.05){
-  n0 = classical_power_analysis(delta, sigma, beta, alpha)
+cheapest_pair = function(n0, rho, gamma){
   pair = optimal_n_N(n0, rho, gamma)
   return(pair)
 }
 
-most_powerful_pair = function(delta, sigma, rho, gamma, budget, cost_Y) {
+most_powerful_pair = function(rho, gamma, budget, cost_Y) {
   if (rho <= 2*sqrt(gamma)/(1+gamma)){
     pair = c(n = budget/cost_Y, N = 0)
   } else {
@@ -65,16 +64,16 @@ power_curve = function(N, n0, rho){
   return(n)
 }
 
-add_power_curves = function(p, N, n0, rho, delta, sigma, color = "black", label = FALSE) {
+add_power_curves = function(p, N, n0, rho, color = "black", label = FALSE) {
   df = expand_grid(N = N, n0 = n0) %>% 
-    mutate(n = power_curve(N, n0, rho),
-           power = ppi_power(n, N, delta, sigma, rho) %>% round(2))
+    mutate(n = power_curve(N, n0, rho))
   if (label) {
     p = p + 
-      geom_line(aes(x = N, y = n, group = n0, color = factor(power)), data = df) + 
-      labs(title = "Finding the most powerful pair (n, N) for a given budget", color = "Power") +
+      geom_line(aes(x = N, y = n, group = n0, color = factor(n0)), data = df) + 
+      labs(title = "Finding the most powerful pair (n, N) for a given budget", 
+           color = "Effective\nsample size") +
       scale_color_manual(
-        breaks = c(0.95,0.9,0.85,0.8), 
+        breaks = c(300,250,200,150), 
         values = c("#99000d","#a50f15","#de2d26","#fb6a4a")
       ) 
   } else {
@@ -95,7 +94,8 @@ add_cost_curves = function(p, N, n0, gamma, cost_Y, color = "black", label = FAL
   if (label) {
     p = p + 
       geom_line(aes(x = N, y = n, group = n0, color = factor(cost)), data = df) + 
-      labs(title = "Finding the cheapest pair (n, N) for a given statistical power", color = "Budget") +
+      labs(title = "Finding the cheapest pair (n, N) for a given effective sample size", 
+           color = "Budget") +
       scale_color_manual(
         breaks = c(225,200,175,150), 
         values = c("#005a32","#006d2c","#238b45","#74c476")
@@ -113,22 +113,19 @@ add_cost_curves = function(p, N, n0, gamma, cost_Y, color = "black", label = FAL
 # Most powerful pair visualization
 ##################################
 
-betas = c(0.2, 0.15, 0.1, 0.05)
-d = 0.2
-delta = d
-sigma = 1
-n0_power = map_dbl(betas, \(b) classical_power_analysis(delta, sigma, b))
+
+n0_power = c(150, 200, 250, 300)
 gamma = 0.05
 rho = 0.75
 cost_Y = 1
-optimal_pair = cheapest_pair(delta, sigma, rho, gamma, beta = betas[3])
+optimal_pair = cheapest_pair(n0_power[3], rho, gamma)
 n0_cost = optimal_pair[1]*(1 + gamma)+gamma * optimal_pair[2]
 
 N = seq(0, 1000, 10)
 
 pp = ggplot() %>% 
   add_cost_curves(N, n0_cost, gamma, cost_Y) %>% 
-  add_power_curves(N, n0_power, rho, delta, sigma, label=T) +
+  add_power_curves(N, n0_power, rho, label=T) +
   annotate("point", x = optimal_pair[2], y = optimal_pair[1], shape = 4, size = 2.1, stroke = 0.65)
 pp
 
@@ -145,7 +142,7 @@ sigma = 1
 gamma = 0.05
 rho = 0.75
 
-optimal_pair = most_powerful_pair(delta, sigma, rho, gamma, n0_cost[3], 1)
+optimal_pair = most_powerful_pair(rho, gamma, n0_cost[3], 1)
 beta = 1 - ppi_power(optimal_pair[1], optimal_pair[2], delta, sigma, rho)
 n0_power = classical_power_analysis(delta, sigma, beta)
 
@@ -153,7 +150,7 @@ N = seq(0, 1000, 10)
 
 cp = ggplot() %>% 
   add_cost_curves(N, n0_cost, gamma, cost_Y, label = T) %>% 
-  add_power_curves(N, n0_power, rho, delta, sigma) +
+  add_power_curves(N, n0_power, rho) +
   annotate("point", x = optimal_pair[2], y = optimal_pair[1], shape = 4, size = 2.1, stroke = 0.65) 
 cp
 
@@ -173,7 +170,7 @@ cp = cp +
   coord_fixed(ratio = y_to_x_ratio) 
 
 
-p = ggpubr::ggarrange(pp,cp,nrow=2,legend = "right", labels = "auto", vjust=1) 
+p = ggpubr::ggarrange(cp,pp,nrow=2,legend = "right", labels = "auto", vjust=1) 
 print(p)
 ggsave(filename = paste0("Figures/9_MostPowerfulAndCheapestPair.pdf"), 
        plot=p, width=7, height=6)
