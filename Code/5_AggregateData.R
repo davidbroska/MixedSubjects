@@ -10,49 +10,53 @@ mms = read_csv("Data/2_SurveySample.csv.gz") %>%
 # Load files with API output
 ############################
 
-# LLM predictions for 22,315 responses with persona
-predictions_wp = c("4_gpt-4-turbo_wp_20240603.csv.gz","4_gpt-3.5-turbo-0125_wp_20240603.csv.gz","4_gpt-4o_wp_20240603.csv.gz")
+# Read files from data folder
+files = list.files("Data/",pattern = "^4_.*[.]csv[.]gz$")
 
-# LLM predictions for 5,000 responses without persona
-predictions_np = c("4_gpt-4-turbo_np_20240603.csv.gz","4_gpt-3.5-turbo-0125_np_20240603.csv.gz","4_gpt-4o_np_20240603.csv.gz")
+# Assign number to prediction if LLM was prompted multiple times
+files_df = tibble(files) %>% 
+  mutate(model = str_remove(files, "_[0-9]+.csv.gz"),
+         date = str_extract(files,"_[0-9]+.csv.gz") %>% str_remove_all("[._a-z]+")) %>% 
+  group_by(model) %>% 
+  arrange(model,date) %>% 
+  mutate(nth_prediction = 1:n()) %>% 
+  ungroup()
 
-# Replicates of 5,000 predictions with persona (identical prompts as in files ending on _wp_20240603.csv.gz)
-replicates_wp  = c("4_gpt-4-turbo_wp_20240605.csv.gz","4_gpt-3.5-turbo-0125_wp_20240605.csv.gz","4_gpt-4o_wp_20240605.csv.gz",
-                   "4_gpt-4-turbo_wp_20240606.csv.gz","4_gpt-3.5-turbo-0125_wp_20240606.csv.gz","4_gpt-4o_wp_20240606.csv.gz")
-
-files = c(predictions_wp,predictions_np,replicates_wp)
 
 # Aggregate files
-df = files %>% 
-  lapply(., function(file){
-    
-    writeLines(file)
-    
-    # read data
-    dd = paste0("Data/",file) %>% 
-      read_csv(show_col_types=F) %>% 
-      mutate(across(everything(), as.character)) %>% 
-      select(ExtendedSessionID:Cat, matches(".Saved"))  
-    
-    # define unique column names for replicates
-    if(str_detect(file,"05.csv.gz")){
-      icol = str_which(colnames(dd), ".Saved")
-      colnames(dd)[icol] = paste0(colnames(dd)[icol], "_2")
-    }
-    if(str_detect(file,"06.csv.gz")){
-      icol = str_which(colnames(dd), ".Saved")
-      colnames(dd)[icol] = paste0(colnames(dd)[icol], "_3")
-    }
+df_list = list()
+for(r in 1:nrow(files_df)){
+  
+  # Get file name
+  file = files_df$files[r]
+  
+  writeLines(file)
+  
+  # Read data frame containing the predictions
+  dd = paste0("Data/",file) %>% 
+    read_csv(show_col_types=F) %>% 
+    mutate(across(everything(), as.character)) %>% 
+    select(ExtendedSessionID:Cat, matches(".Saved")) 
+  
+  # nth prediction by LLM
+  nth = files_df$nth_prediction[r]
+  
+  # Disambiguate column names by counting the nth prediction
+  icol = str_which(colnames(dd), ".Saved")
+  colnames(dd)[icol] = paste0(colnames(dd)[icol], "_", nth)
+  
+  # Append dataframe to list
+  df_list[[r]] = dd
+  
+}
 
-    return(dd)
-    
-  }) %>% 
+
+df = df_list %>% 
   # join all data sets with predictions
   purrr::reduce(full_join, by=colnames(mms)) %>% 
   full_join(mms, ., by=colnames(mms)) %>% 
   # keep rows with at least one outcome value predicted by LLM
-  filter(if_any(matches("p_Saved"), ~!is.na(.)))
-
+  filter(if_any(matches("p_Saved_"), ~!is.na(.)))
 
 
 ##############################
@@ -87,20 +91,28 @@ find_mode = function(.data, .vars, .na_rm=F){
   })
 }
 
-gpt35turbo0125_wp_reps = c("gpt35turbo0125_wp_Saved", "gpt35turbo0125_wp_Saved_2", "gpt35turbo0125_wp_Saved_3")
-gpt4turbo_wp_reps = c("gpt4turbo_wp_Saved", "gpt4turbo_wp_Saved_2", "gpt4turbo_wp_Saved_3")
-gpt4o_wp_reps = c("gpt4o_wp_Saved", "gpt4o_wp_Saved_2", "gpt4o_wp_Saved_3")
-
-# find modal prediction
-df$gpt35turbo0125_wp_Saved_mode = find_mode(df, gpt35turbo0125_wp_reps)
-df$gpt4turbo_wp_Saved_mode = find_mode(df, gpt4turbo_wp_reps)
-df$gpt4o_wp_Saved_mode = find_mode(df, gpt4o_wp_reps)
 
 
-# verify
-df %>% select(all_of(c(gpt35turbo0125_wp_reps,"gpt35turbo0125_wp_Saved_mode"))) %>% head()
-df %>% select(all_of(c(gpt4turbo_wp_reps,"gpt4turbo_wp_Saved_mode"))) %>% head()
-df %>% select(all_of(c(gpt4o_wp_reps,"gpt4o_wp_Saved_mode"))) %>% head()
+# # find modal prediction for GPT 3.5 Turbo with persona 
+# gpt35turbo0125_wp_reps = str_subset(colnames(df), "gpt35turbo0125_wp")
+# df$gpt35turbo0125_wp_Saved_mode = find_mode(df, gpt35turbo0125_wp_reps)
+# 
+# # find modal prediction for GPT4 Turbo with persona
+# gpt4turbo_wp_reps = str_subset(colnames(df), "gpt4turbo_wp")
+# df$gpt4turbo_wp_Saved_mode = find_mode(df, gpt4turbo_wp_reps)
+# 
+# # find modal prediction for GPT4o with persona
+# gpt4o_wp_reps = str_subset(colnames(df), "gpt4o_wp")
+# df$gpt4o_wp_Saved_mode = find_mode(df, gpt4o_wp_reps)
+# 
+# # find modal prediction across all models with persona
+# all_wp_reps = c(gpt35turbo0125_wp_reps,gpt4turbo_wp_reps,gpt4o_wp_reps)
+# df$all_wp_Saved_mode = find_mode(df, all_wp_reps)
+# 
+# # verify calculation of mode
+# df %>% select(all_of(c(gpt35turbo0125_wp_reps,"gpt35turbo0125_wp_Saved_mode"))) %>% head()
+# df %>% select(all_of(c(gpt4turbo_wp_reps,"gpt4turbo_wp_Saved_mode"))) %>% head()
+# df %>% select(all_of(c(gpt4o_wp_reps,"gpt4o_wp_Saved_mode"))) %>% head()
 
 # Check for NA values
 summarize(df,across(matches("wp_Saved"), ~sum(is.na(.))))
@@ -108,8 +120,4 @@ summarize(df,across(matches("wp_Saved"), ~sum(is.na(.))))
 # Save file with predictions from LLMs
 write_csv(df,"Data/5_SurveySampleLLM.csv.gz")
 
-# Save file for ppi_py example with a subset of columns
-ppipy_df = df %>% 
-  select(ExtendedSessionID:gpt4turbo_wp_Saved)
 
-write_csv(df,"Data/5_SurveySampleLLM_ppipy.csv.gz")

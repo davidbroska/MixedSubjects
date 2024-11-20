@@ -17,7 +17,7 @@ ymax = 0.1435
 ##############################
 
 # Import averaged simulation results
-dfn = read_csv("Data/simulation_study_N.csv.gz")
+dfn = read_csv("Data/10_simulation_study_N.csv.gz")
 
 # Transform data to long format and update method labels
 dfn_long = dfn %>%

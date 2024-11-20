@@ -1,78 +1,17 @@
 # Load functions
 source("Code/1_Functions.R")
 
-################################################################################
-# American Community Survey ----------------------------------------------------
-################################################################################
-
-# Read data with survey responses and apply exclusion criteria from Awad et al
-acs = get_filepath("usa_00004.csv.gz") %>% 
-  fread() %>% 
-  rename_with(~ str_remove(., "US2016C_")) %>% 
-  filter(
-    # Filter out Puerto Rico
-    ST!=72,
-    AGEP >= 15,
-    AGEP <  95) %>% 
-  mutate(
-    # Correct income for years
-    CorrPINCP = as.numeric(PINCP)*as.numeric(ADJINC)/1000000,
-    
-    IncomeBracketSmall = case_when(
-      CorrPINCP<5000 ~"$0-$5,000",
-      CorrPINCP>=5000 & CorrPINCP<25000 ~"$5,001-\n$25,000",
-      CorrPINCP>=25000 & CorrPINCP<50000 ~"$25,001-\n$50,000",
-      CorrPINCP>=50000 & CorrPINCP<100000 ~"$50,001-\n$100,000",
-      CorrPINCP>=100000 ~"More than\n$100,000") %>% 
-      factor(levels=c("$0-$5,000","$5,001-\n$25,000","$25,001-\n$50,000","$50,001-\n$100,000","More than\n$100,000")),
-    
-    AgeBracket = case_when(AGEP>=15 & AGEP<25 ~"15-24",
-                           AGEP>=25 & AGEP<35 ~"25-34",
-                           AGEP>=35 & AGEP<45 ~"35-44",
-                           AGEP>=45 & AGEP<55 ~"45-54",
-                           AGEP>=55 & AGEP<65 ~"55-64",
-                           AGEP>=65 & AGEP<75 ~"65-74",
-                           AGEP>=75 & AGEP<85 ~"75-84",
-                           AGEP>=85 & AGEP<95 ~"85-94") %>% 
-      factor(levels=c("15-24","25-34","35-44","45-54","55-64","65-74","75-84","85-94")),
-    
-    Gender = case_when(SEX==1 ~"Man", SEX==2 ~"Woman") %>% 
-      factor(levels=c("Man","Woman")),
-    
-    EducationBracket:= case_when(
-      SCHL<=15 ~ "Less than\nhigh school",
-      SCHL %in% c(16:17) ~"High school",
-      SCHL %in% c(18:21) ~"Some college",
-      SCHL %in% c(22:24) ~"Postgraduate") %>% 
-      factor(levels=c("Less than\nhigh school","High school","Some college","Postgraduate")))
-
-## Calculate percentages and correct with weights
-acsPerc = acs %>% 
-  group_by(Gender,AgeBracket,IncomeBracketSmall,EducationBracket) %>% 
-  summarise(ACSn = sum(PWGTP)) %>% 
-  ungroup() %>% 
-  mutate(ACSfreq = ACSn/sum(ACSn))
-
-# Check that there are no missings
-summarize_all(acsPerc, ~ sum(is.na(.)))
-
-
-
-
-
 
 ################################################################################
 # Awad et al. (2018) -----------------------------------------------------------
 ################################################################################
-
 
 # Download data from https://osf.io/3hvt2/?view_only=4bb49492edee4a8eb1758552a362a2cf
 profiles.S = get_filepath("SharedResponsesSurvey.csv.tar") %>% 
   fread() %>% 
   mutate(across(Review_age, as.numeric)) 
 
-
-# A completed session is represented by at max 26 rows, and some users took the survey multiple times 
+# Identify sessions with more than 26 rows and users who took the survey multiple times 
 anom = profiles.S %>% 
   count(UserID,ExtendedSessionID,sort = T) %>% 
   group_by(UserID) %>% 
@@ -92,8 +31,6 @@ profiles.S = profiles.S %>%
   filter(n >=2) %>% 
   select(-n) %>% 
   data.table()
-
- 
 
 # Preprocess variables
 profiles.S = PreprocessProfiles(profiles.S)
@@ -151,116 +88,102 @@ profiles.S = profiles.S %>%
   data.table()
 
 
-# Check that there are no missings
+# Check that there are no missing values
 summarise_all(profiles.S, ~ sum(is.na(.)))
 
-# Number of rows in millions
-nrow(profiles.S) / 10^6
+# Number of dilemmas in thousands (we divide by 2 since there are 2 rows per observation)
+nrow(profiles.S) / 10^3 / 2
+
+# Number of respondents in thousands
+length(unique(profiles.S$UserID)) / 10^3
 
 
-
-################################################################################
-# Quota sample ------------------------------------------------------------
-################################################################################
-
-
-
-# We expect 320=2*8*5*4 unique combinations, and these are available in ACS
-acsPerc %>% 
-  distinct(Gender,AgeBracket,IncomeBracketSmall,EducationBracket) %>% 
-  nrow()
-
-# Set sample size higher than the target of 2,000 because not all quotas will be matched exactly
-nobs0 = 2500
-
-# Get distinct combinations of categories and calculate frequencies
-mmPerc = profiles.S %>% 
-  # Collect data on users that match a stratum
-  distinct(UserID,
-           Review_gender,IncomeBracketSmall,Review_educationBracket,Review_ageBracket) %>% 
-  group_by(Review_gender,IncomeBracketSmall,Review_educationBracket,Review_ageBracket) %>% 
-  summarize(UserIDs = paste0(UserID,collapse = ","), MMn=n()) %>% 
-  ungroup() %>% 
-  mutate(MMfreq = MMn / sum(MMn))
-
-# Not all combinations of categories from ACS are in moral machine data
-nrow(acsPerc)
-nrow(mmPerc)
-
-
-# Keep only categories that are in both datasets and re-calculate the relative frequency in ACS 
-FreqMerged = mmPerc %>% 
-  left_join(acsPerc,by=c("Review_gender"="Gender","Review_ageBracket"="AgeBracket",
-                         "IncomeBracketSmall","Review_educationBracket"="EducationBracket")) %>% 
-  mutate(
-    # Rescale relative frequencies because some combinations were dropped in join
-    ACSfreqResc = ACSfreq / sum(ACSfreq),
-    # Calculate expected number of people to sample from each stratum from ACS
-    ExpCount = round(ACSfreqResc * nobs0), 
-    # Calculate sample size within each stratum
-    SampleSize = ExpCount %>% 
-      ifelse(.==0,1,.) %>%     # Include at least one person from each stratum
-      ifelse(. > MMn, MMn, .)  # Match expected counts as close as possible
-  )
-
-# Frequencies sum up to 1
-sum(FreqMerged$ACSfreqResc)
-
-# Get sampled user IDs
-set.seed(24042024)
-UserIDs = FreqMerged %>% 
-  mutate(
-    UserIDs = UserIDs %>% str_split(","),
-    samp = purrr::map2(.x = UserIDs, .y= SampleSize, 
-                       .f = function(.x, .y) sample(.x, size=.y,replace=F))) %>% 
-  unnest(cols=samp) %>% 
-  pull(samp)
-
-# Frequencies sum up to 1
-sum(FreqMerged$ACSfreqResc)
-
-# Effective sample size 
-length(UserIDs)
-length(unique(UserIDs))
-
-# Create moral machine sample  
-mms_sample = filter(profiles.S, UserID %in% UserIDs)
-  
-# Check that each response ID has two rows
-all(count(mms_sample,ResponseID)$n == 2)
-
-
-
-################################################################################
-# Join columns that characterize scenario --------------------------------------
-################################################################################
 
 # Download data from https://osf.io/3hvt2/?view_only=4bb49492edee4a8eb1758552a362a2cf
 profiles.S.full = get_filepath("SharedResponses.csv.tar") %>% 
   fread() 
 
-mms = mms_sample %>% 
+# Join columns that characterize scenario
+mms = profiles.S %>% 
   distinct(ExtendedSessionID,ResponseID,UserID,Review_gender,Review_age,Review_ageBracket,
            Review_income,Review_ContinuousIncome,IncomeBracketSmall,
            Review_education,Review_educationBracket,Review_political,Review_religious) %>% 
   inner_join(profiles.S.full, by = join_by(ResponseID, ExtendedSessionID, UserID)) %>% 
   mutate(Man = as.integer(Man))
 
-# Check that each response ID has two rows
+# Verify that each response ID has two rows
 all(count(mms,ResponseID)$n == 2)
 
-# Check that there are no missings
+# Verify that there are no missing values
 summarize_all(mms, ~ sum(is.na(.)))
 
+# Save data 
 write_csv(mms,paste0(get_filepath("Data"),"/2_SurveySample.csv.gz"))
 
 
 ################################################################################
-# Benchmark results ------------------------------------------------------------
+# American Community Survey ----------------------------------------------------
+################################################################################
+
+# Read data with survey responses and apply exclusion criteria from Awad et al
+acs = get_filepath("usa_00004.csv.gz") %>% 
+  fread() %>% 
+  rename_with(~ str_remove(., "US2016C_")) %>% 
+  filter(
+    # Filter out Puerto Rico
+    ST!=72,
+    AGEP >= 15,
+    AGEP <  95) %>% 
+  mutate(
+    # Correct income for years
+    CorrPINCP = as.numeric(PINCP)*as.numeric(ADJINC)/1000000,
+    
+    IncomeBracketSmall = case_when(
+      CorrPINCP<5000 ~"$0-$5,000",
+      CorrPINCP>=5000 & CorrPINCP<25000 ~"$5,001-\n$25,000",
+      CorrPINCP>=25000 & CorrPINCP<50000 ~"$25,001-\n$50,000",
+      CorrPINCP>=50000 & CorrPINCP<100000 ~"$50,001-\n$100,000",
+      CorrPINCP>=100000 ~"More than\n$100,000") %>% 
+      factor(levels=c("$0-$5,000","$5,001-\n$25,000","$25,001-\n$50,000","$50,001-\n$100,000","More than\n$100,000")),
+    
+    AgeBracket = case_when(AGEP>=15 & AGEP<25 ~"15-24",
+                           AGEP>=25 & AGEP<35 ~"25-34",
+                           AGEP>=35 & AGEP<45 ~"35-44",
+                           AGEP>=45 & AGEP<55 ~"45-54",
+                           AGEP>=55 & AGEP<65 ~"55-64",
+                           AGEP>=65 & AGEP<75 ~"65-74",
+                           AGEP>=75 & AGEP<85 ~"75-84",
+                           AGEP>=85 & AGEP<95 ~"85-94") %>% 
+      factor(levels=c("15-24","25-34","35-44","45-54","55-64","65-74","75-84","85-94")),
+    
+    Gender = case_when(SEX==1 ~"Man", SEX==2 ~"Woman") %>% 
+      factor(levels=c("Man","Woman")),
+    
+    EducationBracket:= case_when(
+      SCHL<=15 ~ "Less than\nhigh school",
+      SCHL %in% c(16:17) ~"High school",
+      SCHL %in% c(18:21) ~"Some college",
+      SCHL %in% c(22:24) ~"Postgraduate") %>% 
+      factor(levels=c("Less than\nhigh school","High school","Some college","Postgraduate")))
+
+## Calculate percentages and correct with weights
+acsPerc = acs %>% 
+  group_by(Gender,AgeBracket,IncomeBracketSmall,EducationBracket) %>% 
+  summarise(ACSn = sum(PWGTP)) %>% 
+  ungroup() %>% 
+  mutate(ACSfreq = ACSn/sum(ACSn))
+
+# Check that there are no missings
+summarize_all(acsPerc, ~ sum(is.na(.)))
+
+
+################################################################################
+# Compare demographic distribution of samples ----------------------------------
 ################################################################################
 
 compute_dem_share = function(.acs_var,.mm_var){
   
+  # American Community Survey
   acsvar = acs %>% 
     group_by({{.acs_var}}) %>% 
     summarize(n = sum(PWGTP)) %>% 
@@ -268,6 +191,7 @@ compute_dem_share = function(.acs_var,.mm_var){
     mutate(acsFreq = n / sum(n)) %>% 
     select(-n)
   
+  # Moral Machine Sample
   mmsvar = mms %>% 
     group_by({{.mm_var}}) %>% 
     summarize(n = length(unique(UserID))) %>% 
@@ -275,53 +199,58 @@ compute_dem_share = function(.acs_var,.mm_var){
     mutate(mmsFreq = n / sum(n)) %>% 
     select(-n)
   
-  mmvar = profiles.S %>% 
-    group_by({{.mm_var}}) %>% 
-    summarize(n = length(unique(UserID))) %>% 
-    ungroup() %>% 
-    mutate(mmFreq = n / sum(n)) %>% 
-    select(-n)
-  
+  # Join
   acsvar %>% 
-    left_join(mmvar,by=join_by({{.acs_var}}  == {{.mm_var}})) %>% 
     left_join(mmsvar,by=join_by({{.acs_var}} == {{.mm_var}})) %>% 
-    mutate(mmFreq = mmFreq %>% ifelse(is.na(.),0,.),
-           mmsFreq = mmsFreq %>% ifelse(is.na(.),0,.), 
+    mutate(mmsFreq = mmsFreq %>% ifelse(is.na(.),0,.), 
            Variable = colnames(select(acs,{{.acs_var}}))) %>% 
     select(Variable, everything()) %>% 
     rename(Level = {{.acs_var}})
   
 }
 
-# Calculate frequencies of demographic categories for each of the three datasets
+# Calculate frequencies of demographic categories for each of the datasets
 GenderFreq = compute_dem_share(Gender,Review_gender)
 AgeFreq = compute_dem_share(AgeBracket,Review_ageBracket)
 EducationFreq = compute_dem_share(EducationBracket,Review_educationBracket) 
 IncomeFreq = compute_dem_share(IncomeBracketSmall,IncomeBracketSmall) 
 
-# Create bar plot
-cols = tribble(
-  ~var,     ~col,      ~lab, 
-  "mmsFreq",  "#DDCC77", " Moral Machine Quota Sample ",
-  "acsFreq",  "#CC6677", " American Community Survey ",
-  "mmFreq",   "#4477AA", " Moral Machine Convenience Sample ") %>% 
-  mutate(lab = str_replace_all(lab," ","\n"),
-         var = factor(var,ordered = T))
-labell = c(AgeBracket="Age",EducationBracket="Education",
-           Gender="Gender",IncomeBracketSmall="Income")
-
+# Assemble statistics and compute absolute difference in relative frequencies
 FreqWide = GenderFreq %>% 
   bind_rows(AgeFreq) %>% 
   bind_rows(EducationFreq) %>% 
   bind_rows(IncomeFreq) %>% 
-  mutate(absDiffmm = abs(acsFreq - mmFreq),
-         absDiffmms = abs(acsFreq - mmsFreq))
+  mutate(absDiffmms = abs(acsFreq - mmsFreq))
 
+# Mean absolute difference across variables
+mean(DiffPP$AvgAbsDiffMMS)
+
+# Calculate mean absolute difference in percentage points per variable
+DiffPP = FreqWide %>% 
+  group_by(Variable) %>% 
+  summarise(AvgAbsDiffMMS = mean(absDiffmms))
+DiffPP
+
+
+# Create bar plot with relative frequencies of demographics
+cols = tribble(
+  ~var,     ~col,      ~lab, 
+  "mmsFreq",  "#4477AA", " Moral Machine Sample ",
+  "acsFreq",  "#CC6677", " American Community Survey ") %>% 
+  mutate(lab = str_replace_all(lab," ","\n"),
+         var = factor(var,ordered = T))
+
+# Create labels for plots
+labell = c(AgeBracket="Age",EducationBracket="Education",
+           Gender="Gender",IncomeBracketSmall="Income")
+
+# Convert from wide to long data format
 FreqLong = FreqWide %>% 
-  pivot_longer(cols = c(acsFreq,mmFreq,mmsFreq)) %>%
+  pivot_longer(cols = c(acsFreq,mmsFreq)) %>%
   mutate(name = factor(name,levels=cols$var))
 
-FreqLong %>% 
+# Create ggplot 
+DemPlot = FreqLong %>% 
   ggplot(aes(Level, value, fill=name)) +
   geom_col(position = position_dodge(), width=0.5) +
   facet_wrap(~ Variable, scales = "free_x",
@@ -329,18 +258,11 @@ FreqLong %>%
   scale_fill_manual(breaks = cols$var, values = cols$col,labels=cols$lab) +
   labs(fill = "Dataset",x="",y="Relative frequency") +
   theme(axis.text.x = element_text(size = 9.5))
-ggsave(filename=paste0(get_filepath("Figures"),"/2_DemographicDistribution.pdf"),width=9,height=6)
 
-# Calculate mean absolute difference in percentage points
-DiffPP = FreqWide %>% 
-  group_by(Variable) %>% 
-  summarise(AvgAbsDiffMMS = mean(absDiffmms),
-            AvgAbsDiffMM = mean(absDiffmm), 
-            Improvement = mean(absDiffmm - absDiffmms))
-DiffPP
+# Save plot
+ggsave(DemPlot,filename=paste0(get_filepath("Figures"),"/2_DemographicDistribution.pdf"),width=9,height=6)
 
-# Mean improvement in matching the census quotas relative to the MM data: 0.084pp
-mean(DiffPP$Improvement)
+
 
 
 # Joined -----------------------------------------------------------------------
@@ -606,7 +528,7 @@ computeACME = function(.profiles,.depvar){
   profiles = PreprocessProfiles(.profiles)
   
   profiles = profiles[ which(!is.na(profiles[[.depvar]])) ]
-  print(paste0("Number of observations: ",nrow(profiles)))
+  print(paste0("Number of observations: ",nrow(profiles)/2))
   
   # Compute ACME values for joined data
   Coeffs.main = GetMainEffectSizes(profiles,T,9, depvar=.depvar)
@@ -622,7 +544,10 @@ computeACME = function(.profiles,.depvar){
 }
 
 Saved = computeACME(data.table(mms),"Saved")
-Saved
+Saved$main %>% mutate(
+  lower = Estimates - 1.96 * se,
+  upper = Estimates + 1.96 * se,
+)
 ptitle = paste0("Human respondents (",length(unique(mms$UserID))," US respondents, ", length(unique(mms$ResponseID))," Decisions)")
 pSaved = PlotAndSave(Saved$main, T, paste0(get_filepath("Figures"),"/2_AMCE_QuotaSample"), Saved$util,ptitle)
 pSaved
