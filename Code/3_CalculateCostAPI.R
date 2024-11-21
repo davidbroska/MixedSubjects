@@ -85,7 +85,7 @@ writeLines(paste0("Average cost: ",avg_c1,"$ for one API call."))
 
 # Cost of a 12 minute survey response with California minimum wage $16.00/hour 
 c1_human = 12 * 16/60                # $3.20    
-c1_llm   = round(13*c1_gpt35,3)     # $0.002652 to $0.003
+c1_llm   = round(13*c1_gpt35,3)      # $0.002652 to $0.003
 
 # Function to calculate the percent saved when complementing human with silicon subjects
 pcost = function(.rho, .cf, .cY, .verbose=F){
@@ -115,8 +115,8 @@ pcost = function(.rho, .cf, .cY, .verbose=F){
 psaving = pcost(.rho=0.35, .cf=c1_llm, .cY=c1_human, .verbose = T)
 psaving
 
-# 165.63$ saved in a n=500 study
-500*c1_human * psaving
+# Dollar saved in a n=1000 study
+1000 * c1_human * psaving
 
 
 
@@ -125,26 +125,37 @@ psaving
 ##################################################################################
 
 # Define function that calculates the effective sample size
-n0 = function(rho, k) {
-  # Define k as the ratio k = N/n and n=1
-  n=1
+n0 = function(rho, n, k) {
+  # Define k as the ratio k = N/n
   
   # Effective sample size
   n0 = (n * (k+1)) / (k*(1-rho^2)+1) 
-  
-  # Percent increase over human subjects sample size n is equal to n0-1
-  #p_increase = (n0 - n) / n
   
   return(n0)
   
 }
 
-# Create dataset with example values for rho 
+# Example: Effective sample size
+n0_07 = n0(rho=0.7, n=1000, k=10)
+n0_09 = n0(rho=0.9, n=1000, k=10)
+
+# Effective sample size as a percentage of human sample size
+round(100 * n0_07 / 1000)
+round(100 * n0_09 / 1000)
+
+# Percentage increase (n0-n)/n
+round(100 * (n0_07 - 1000) / 1000, 2)
+round(100 * (n0_09 - 1000) / 1000, 2)
+
+
+
+# Define n=1 to let the effective sample size n0 be a multiple of the human sample size
 n0_plotdata = expand.grid(
+  n = 1,
   rho = c(0.1, 0.3, 0.5, 0.7, 0.9), 
   k = seq(0, 10, by=0.1)
 ) %>% 
-  mutate(n0 = n0(rho=rho, k=k))
+  mutate(n0 = n0(rho=rho, n=n, k=k))
 
 # Plot ratio of sample sizes k against effective sample size
 p_n0 = ggplot(n0_plotdata, aes(x = k, y = n0, color = factor(rho), linetype= factor(rho))) +
@@ -169,43 +180,54 @@ p_n0 = ggplot(n0_plotdata, aes(x = k, y = n0, color = factor(rho), linetype= fac
     linetype = guide_legend(title = bquote("PPI correlation "~tilde(rho)))
   ) +
   theme(
-    legend.position = "right",
+    legend.position = "bottom",
     legend.key.size = unit(4,"lines"), 
     legend.key.height = unit(2, "lines")
 ) 
+
 p_n0
-ggsave(plot = p_n0, filename = "Figures/3_EffectiveSampleSize.pdf", width=7, height=5)
+
 
 
 
 
 #############################################################
-# Plot theoretical ratio of PPI CI width against classical CI
+# Plot theoretical ratio of PPI SE width against classical SE
 #############################################################
 
-# Define function that calculates the ratio of PPI CI to classical CI width
-p_of_classic_ci_ratio = function(rho, k) {
+# Define function that calculates the ratio of PPI SE to classical SE width
+p_of_classic_se_ratio = function(rho, k) {
   # Define k as the ratio k = N/n
   # Then N/(N+n) = k/(1+k)
   
-  # Ratio of PPI CI width to classical CI width 
+  # Ratio of PPI SE to classical SE  
   sqrt(1 - (k / (1+k)) * rho^2)
   
 }
 
+# Example: Ratio of PPI standard error to human sample standard error
+se_07 = p_of_classic_se_ratio(rho=0.7, k=10)
+se_09 = p_of_classic_se_ratio(rho=0.9, k=10)
+
+# Effective sample size as a percentage of human sample size
+round(100 * se_07, 2)
+round(100 * se_09, 2)
+
+# Percentage change
+round(100 * (se_07 - 1) / 1, 2)
+round(100 * (se_09 - 1) / 1, 2)
+
+
 # Create dataset with example values for rho 
-ci_plotdata = expand.grid(
+se_plotdata = expand.grid(
   rho = c(0.1, 0.3, 0.5, 0.7, 0.9), 
   k = seq(0, 10, by=0.1)
 ) %>% 
-  mutate(p_of_classic_ci = p_of_classic_ci_ratio(rho=rho, k=k))
+  mutate(p_of_classic_se = p_of_classic_se_ratio(rho=rho, k=k))
 
-# Example from article
-example_ratio =  round(100 * p_of_classic_ci_ratio(rho=0.75, k=4), 1)
-100 - example_ratio
 
-# Plot ratio of sample sizes k against ratio of CI widths
-p_ci = ggplot(ci_plotdata, aes(x = k, y = p_of_classic_ci, color = factor(rho), linetype= factor(rho))) +
+# Plot ratio of sample sizes k against ratio of SEs
+p_se = ggplot(se_plotdata, aes(x = k, y = p_of_classic_se, color = factor(rho), linetype= factor(rho))) +
   geom_line(linewidth = 0.9) +
   scale_x_continuous(
     breaks = seq(0, 10, by=1)
@@ -220,22 +242,41 @@ p_ci = ggplot(ci_plotdata, aes(x = k, y = p_of_classic_ci, color = factor(rho), 
   ) +
   labs(
     x = "Number of predictions for every gold-standard observation N/n",
-    y = "PPI SE as percentage of classical SE"
+    y = "PPI SE as percentage of human subjects SE"
   ) +
   guides(
     color = guide_legend(title = bquote("PPI correlation "~tilde(rho))), 
     linetype = guide_legend(title = bquote("PPI correlation "~tilde(rho)))
   ) +
   theme(
-    legend.position = "right",
+    legend.position = "bottom",
     legend.key.size = unit(4,"lines"), 
     legend.key.height = unit(2, "lines")
   ) 
-p_ci
-ggsave(plot = p_ci, filename = "Figures/3_SeAsPercentageOfShareOfClassicSe.pdf", width=7, height=5)
+
+p_se
 
 
+##################################
+# Create combined plot and example
+##################################
 
+# Create plot combining effective sample size and standard error
+p_legend = get_legend(p_se)
+
+p = ggpubr::ggarrange(
+  p_n0, p_se, 
+  nrow=1,
+  labels = "auto", 
+  vjust=1.8,
+  common.legend = T, 
+  legend = "bottom",
+  legend.grob = p_legend
+) 
+p 
+
+# Save plot 
+ggsave(plot = p, filename = "Figures/3_SEandN0.pdf", width=10, height=6)
 
 
 ###############################################################################
