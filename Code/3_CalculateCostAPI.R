@@ -153,8 +153,7 @@ round(100 * (n0_09 - 1000) / 1000, 2)
 n0_plotdata = expand.grid(
   n = 1,
   rho = c(0.1, 0.3, 0.5, 0.7, 0.9), 
-  k = seq(0, 10, by=0.1)
-) %>% 
+  k = seq(0, 10, by=0.1)) %>% 
   mutate(n0 = n0(rho=rho, n=n, k=k))
 
 # Plot ratio of sample sizes k against effective sample size
@@ -221,8 +220,7 @@ round(100 * (se_09 - 1) / 1, 2)
 # Create dataset with example values for rho 
 se_plotdata = expand.grid(
   rho = c(0.1, 0.3, 0.5, 0.7, 0.9), 
-  k = seq(0, 10, by=0.1)
-) %>% 
+  k = seq(0, 10, by=0.1)) %>% 
   mutate(p_of_classic_se = p_of_classic_se_ratio(rho=rho, k=k))
 
 
@@ -257,14 +255,14 @@ p_se = ggplot(se_plotdata, aes(x = k, y = p_of_classic_se, color = factor(rho), 
 p_se
 
 
-##################################
-# Create combined plot and example
-##################################
+######################
+# Create combined plot
+######################
 
 # Create plot combining effective sample size and standard error
 p_legend = get_legend(p_se)
 
-p = ggpubr::ggarrange(
+p_combined = ggpubr::ggarrange(
   p_n0, p_se, 
   nrow=1,
   labels = "auto", 
@@ -273,10 +271,11 @@ p = ggpubr::ggarrange(
   legend = "bottom",
   legend.grob = p_legend
 ) 
-p 
+
+p_combined
 
 # Save plot 
-ggsave(plot = p, filename = "Figures/3_SEandN0.pdf", width=10, height=6)
+ggsave(plot = p_combined, filename = "Figures/3_SEandN0.pdf", width=10, height=6)
 
 
 ###############################################################################
@@ -296,7 +295,7 @@ dd = expand.grid(rho = c(0.1, 0.3, 0.5, 0.7, 0.9),
   ) %>% 
   filter(!is.na(pcost))
 
-ggplot(dd, aes(1/gamma, 1-pcost, color = factor(rho), linetype = factor(rho))) +
+p_cost = ggplot(dd, aes(1/gamma, 1-pcost, color = factor(rho), linetype = factor(rho))) +
   geom_line(linewidth = 0.9) +
   scale_y_continuous(
     labels = scales::percent_format(accuracy = 1), 
@@ -319,6 +318,10 @@ ggplot(dd, aes(1/gamma, 1-pcost, color = factor(rho), linetype = factor(rho))) +
     legend.key.size = unit(4,"lines"), 
     legend.key.height = unit(2, "lines")
   ) 
-ggsave(filename = "Figures/3_PercentCostOfHumanSubjectsExperiment.pdf", width=7, height=5)
+
+p_cost
+
+# Save plot
+ggsave(plot = p_cost, filename = "Figures/3_PercentCostOfHumanSubjectsExperiment.pdf", width=7, height=5)
 
 
