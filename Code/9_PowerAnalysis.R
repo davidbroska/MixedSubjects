@@ -94,7 +94,7 @@ add_cost_curves = function(p, N, n0, gamma, cost_Y, color = "black", label = FAL
   if (label) {
     p = p + 
       geom_line(aes(x = N, y = n, group = n0, color = factor(cost)), data = df) + 
-      labs(title = "Finding the cheapest pair (n, N) for a given effective sample size", 
+      labs(title = "Finding the cheapest pair (n, N) for a given statistical power", 
            color = "Budget") +
       scale_color_manual(
         breaks = c(225,200,175,150), 
@@ -126,7 +126,9 @@ N = seq(0, 1000, 10)
 pp = ggplot() %>% 
   add_cost_curves(N, n0_cost, gamma, cost_Y) %>% 
   add_power_curves(N, n0_power, rho, label=T) +
-  annotate("point", x = optimal_pair[2], y = optimal_pair[1], shape = 4, size = 2.1, stroke = 0.65)
+  annotate("point", x = optimal_pair[2], y = optimal_pair[1], shape = 4, size = 2.1, stroke = 0.65) +
+  theme(legend.key.width = unit(0.5, "inches"), 
+        plot.margin = unit(c(0, 0, 0, 0), "inches"))  
 pp
 
 
@@ -151,7 +153,10 @@ N = seq(0, 1000, 10)
 cp = ggplot() %>% 
   add_cost_curves(N, n0_cost, gamma, cost_Y, label = T) %>% 
   add_power_curves(N, n0_power, rho) +
-  annotate("point", x = optimal_pair[2], y = optimal_pair[1], shape = 4, size = 2.1, stroke = 0.65) 
+  annotate("point", x = optimal_pair[2], y = optimal_pair[1], shape = 4, size = 2.1, stroke = 0.65) +
+  theme(legend.key.width = unit(0.5, "inches"), 
+        plot.margin = unit(c(0, 0, 0, 0), "inches"))  
+
 cp
 
 
@@ -170,7 +175,7 @@ cp = cp +
   coord_fixed(ratio = y_to_x_ratio) 
 
 
-p = ggpubr::ggarrange(cp,pp,nrow=2,legend = "right", labels = "auto", vjust=1) 
+p = ggpubr::ggarrange(cp,pp,nrow=2,legend = "right", labels = "auto", hjust=-0.5, vjust=1.5) 
 print(p)
 ggsave(filename = paste0("Figures/9_MostPowerfulAndCheapestPair.pdf"), 
        plot=p, width=7, height=6)

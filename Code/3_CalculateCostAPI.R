@@ -1,124 +1,6 @@
 # Load functions
 source("Code/1_Functions.R")
 
-cost = function(nprompt, ntok_in, price1k_in, ntok_out, price1k_out, verbose=T){
-  
-  p_in  = price1k_in / 1000
-  p_out = price1k_out / 1000
-
-  dollars = nprompt*(ntok_in * p_in + ntok_out * p_out)
-
-  return(dollars)
-}
-
-# pricing: https://openai.com/api/pricing/
-
-# length of scenario description
-ntok_in  = 390  
-# output
-ntok_out = 6    
-
-
-##################
-# Costs per sample
-##################
-
-# survey responses from 2097 users
-nprompt = 22315 
-
-# gpt-3.5-turbo-0125: 3.57$ for API 22315 calls
-c_gpt35 = cost(nprompt=nprompt, ntok_in=ntok_in, ntok_out=ntok_out, 
-               price1k_in = 0.0005, price1k_out = 0.0015)
-
-# gpt-4-turbo: 71.41$ for API 22315 calls
-c_gpt4t = cost(nprompt=5000, ntok_in=ntok_in, ntok_out=ntok_out, 
-               price1k_in = 0.01, price1k_out = 0.03)
-
-# gpt-4o: 35.7$ for API 22315 calls
-c_gpt4o = cost(nprompt=nprompt, ntok_in=ntok_in, ntok_out=ntok_out, 
-               price1k_in = 0.00250 , price1k_out = 0.00125)
-
-writeLines(paste0("gpt-3.5-turbo-0125: ",round(c_gpt35,2),"$ for ",nprompt," API calls."))
-writeLines(paste0("gpt-4-turbo: ",round(c_gpt4t,2),"$ for ",nprompt," API calls."))
-writeLines(paste0("gpt-4o: ",round(c_gpt4o,2),"$ for ",nprompt," API calls."))
-writeLines(paste0("Total cost: ", round(sum(c(c_gpt35,c_gpt4t,c_gpt4o)),2),"$."))
-
-# gpt-3.5-turbo-0125: 4.55$ for API 22315 calls.
-# gpt-4-turbo: 91.05$ for API 22315 calls.
-# gpt-4o: 45.52$ for API 22315 calls.
-# Total cost: 141.12$.
-
-
-##################
-# Costs per prompt
-##################
-
-# gpt-3.5-turbo-0125: 3.57$ for API 22315 calls
-c1_gpt35 = cost(nprompt=1, ntok_in=ntok_in, ntok_out=ntok_out, 
-                price1k_in = 0.0005, price1k_out = 0.0015)
-
-# gpt-4-turbo: 71.41$ for API 22315 calls
-c1_gpt4t = cost(nprompt=1, ntok_in=ntok_in, ntok_out=ntok_out, 
-                price1k_in = 0.01, price1k_out = 0.03)
-
-# gpt-4o: 35.7$ for API 22315 calls
-c1_gpt4o = cost(nprompt=1, ntok_in=ntok_in, ntok_out=ntok_out, 
-                price1k_in = 0.00250 , price1k_out = 0.00125)
-
-avg_c1 = mean(c1_gpt35,c1_gpt4t,c1_gpt4o)
-
-writeLines(paste0("gpt-3.5-turbo-0125: ",c1_gpt35,"$ for one API call."))
-writeLines(paste0("gpt-4-turbo: ",c1_gpt4t,"$ for one API call."))
-writeLines(paste0("gpt-4o: ",c1_gpt4o,"$ for one API call."))
-writeLines(paste0("Average cost: ",avg_c1,"$ for one API call."))
-
-# gpt-3.5-turbo-0125: 0.000204$ for one API call.
-# gpt-4-turbo: 0.00408$ for one API call.
-# gpt-4o: 0.00204$ for one API call.
-
-
-
-
-###########################
-# Cost saving requirements
-###########################
-
-# Cost of a 12 minute survey response with California minimum wage $16.00/hour 
-c1_human = 12 * 16/60                # $3.20    
-c1_llm   = round(13*c1_gpt35,3)      # $0.002652 to $0.003
-
-# Function to calculate the percent saved when complementing human with silicon subjects
-pcost = function(.rho, .cf, .cY, .verbose=F){
-  
-  # cost of silicon sampling as a share of sampling human responses
-  gamma =  .cf / .cY
-  
-  
-  # check is rho sufficiently large
-  minimum_rho = (2*sqrt(gamma)) / (1+gamma)
-  is_sufficient = .rho > minimum_rho
-  
-  # print warning if not
-  if(any(!is_sufficient)) print("Rho is not sufficiently large for some cases.")
-  
-  pcost = .rho^2 - gamma * .rho^2 - 2*sqrt(gamma * .rho^2 * (1-.rho^2))
-  
-  if(.verbose){
-    print(paste0("gamma: ", gamma))
-    print(paste0("minimum rho: ", round(minimum_rho,3)))
-  }
-  
-  return(pcost)
-}
-
-# % saved
-psaving = pcost(.rho=0.35, .cf=c1_llm, .cY=c1_human, .verbose = T)
-psaving
-
-# Dollar saved in a n=1000 study
-1000 * c1_human * psaving
-
-
 
 ##################################################################################
 # Plot effective sample size against N for different values of the PPI correlation
@@ -255,11 +137,11 @@ p_se = ggplot(se_plotdata, aes(x = k, y = p_of_classic_se, color = factor(rho), 
 p_se
 
 
-######################
-# Create combined plot
-######################
+########################################################################
+# Create combined plot with effective sample size n0 and standard errors
+########################################################################
 
-# Create plot combining effective sample size and standard error
+# Create plot combining effective sample size and standard errors
 p_legend = get_legend(p_se)
 
 p_combined = ggpubr::ggarrange(
@@ -278,24 +160,172 @@ p_combined
 ggsave(plot = p_combined, filename = "Figures/3_SEandN0.pdf", width=10, height=6)
 
 
+
+
+
+##################
+# Costs per sample
+##################
+
+cost = function(nprompt, ntok_in, price1k_in, ntok_out, price1k_out, verbose=T){
+  
+  p_in  = price1k_in / 1000
+  p_out = price1k_out / 1000
+  
+  dollars = nprompt*(ntok_in * p_in + ntok_out * p_out)
+  
+  return(dollars)
+}
+
+# pricing: https://openai.com/api/pricing/
+
+# length of scenario description
+ntok_in  = 390  
+# output
+ntok_out = 5    
+
+
+# survey responses from 2097 users
+nprompt = 22315 
+
+# gpt-3.5-turbo-0125: 3.57$ for API 22315 calls
+c_gpt35 = cost(nprompt=nprompt, ntok_in=ntok_in, ntok_out=ntok_out, 
+               price1k_in = 0.0005, price1k_out = 0.0015)
+
+# gpt-4-turbo: 71.41$ for API 22315 calls
+c_gpt4t = cost(nprompt=5000, ntok_in=ntok_in, ntok_out=ntok_out, 
+               price1k_in = 0.01, price1k_out = 0.03)
+
+# gpt-4o: 35.7$ for API 22315 calls
+c_gpt4o = cost(nprompt=nprompt, ntok_in=ntok_in, ntok_out=ntok_out, 
+               price1k_in = 0.00250 , price1k_out = 0.00125)
+
+writeLines(paste0("gpt-3.5-turbo-0125: ",round(c_gpt35,2),"$ for ",nprompt," API calls."))
+writeLines(paste0("gpt-4-turbo: ",round(c_gpt4t,2),"$ for ",nprompt," API calls."))
+writeLines(paste0("gpt-4o: ",round(c_gpt4o,2),"$ for ",nprompt," API calls."))
+writeLines(paste0("Total cost: ", round(sum(c(c_gpt35,c_gpt4t,c_gpt4o)),2),"$."))
+
+# gpt-3.5-turbo-0125: 4.55$ for API 22315 calls.
+# gpt-4-turbo: 91.05$ for API 22315 calls.
+# gpt-4o: 45.52$ for API 22315 calls.
+# Total cost: 141.12$.
+
+
+##################
+# Costs per prompt
+##################
+
+# gpt-3.5-turbo-0125: 3.57$ for API 22315 calls
+c1_gpt35 = cost(nprompt=1, ntok_in=ntok_in, ntok_out=ntok_out, 
+                price1k_in = 0.0005, price1k_out = 0.0015)
+
+# gpt-4-turbo: 71.41$ for API 22315 calls
+c1_gpt4t = cost(nprompt=1, ntok_in=ntok_in, ntok_out=ntok_out, 
+                price1k_in = 0.01, price1k_out = 0.03)
+
+# gpt-4o: 35.7$ for API 22315 calls
+c1_gpt4o = cost(nprompt=1, ntok_in=ntok_in, ntok_out=ntok_out, 
+                price1k_in = 0.00250 , price1k_out = 0.00125)
+
+# Average costs across GPT models
+avg_c1 = mean(c1_gpt35,c1_gpt4t,c1_gpt4o)
+
+writeLines(paste0("gpt-4-turbo: ",c1_gpt4t,"$ for one API call."))
+writeLines(paste0("gpt-3.5-turbo-0125: ",c1_gpt35,"$ for one API call."))
+writeLines(paste0("gpt-4o: ",c1_gpt4o,"$ for one API call."))
+writeLines(paste0("Average cost: ",avg_c1,"$ for one API call."))
+
+# gpt-3.5-turbo-0125: 0.000204$ for one API call.
+# gpt-4-turbo: 0.00408$ for one API call.
+# gpt-4o: 0.00204$ for one API call.
+
+
+
+
+###########################
+# Cost saving requirements
+###########################
+
+
+
+# Function to calculate the cost of mixed subjects experiment as a percentage of human subjects experiment
+pcost = function(.rho, .cf, .cY, .verbose=F){
+  
+  # cost of silicon sampling as a share of sampling human responses
+  gamma =  .cf / .cY
+  
+  
+  # Check is rho sufficiently large
+  minimum_rho = (2*sqrt(gamma)) / (1+gamma)
+  is_sufficient = .rho > minimum_rho
+  
+  # Print warning if not
+  if(any(!is_sufficient)) print("Rho is not sufficiently large for some cases.")
+  
+  # Calculate the % of the costs saved when conducting when conducting a mixed rather than human subjects experiment
+  pcost_saved = .rho^2 - gamma * .rho^2 - 2*sqrt(gamma * .rho^2 * (1-.rho^2))
+  
+  # Calculate the costs of a mixed subjects experiment as a percentage of a human subjects experiment
+  pcost = 1 - pcost_saved
+
+  
+  if(.verbose){
+    print(paste0("Cost of silicon subject as percentage of the costs for a human subject: ", 100 * gamma, "%"))
+    print(paste0("Silicon subjects responses affordable for human subject response: ", 1/gamma))
+    print(paste0("Minimum PPI correlation: ", round(minimum_rho,3)))
+    print(paste0("Percentage of cost of a human subjects experiment: ", round(100*pcost,2),"%"))
+  }
+  
+  return(pcost)
+}
+
+
+# Cost of a LLM response 
+c1_gpt4t = cost(nprompt=1, ntok_in=ntok_in, ntok_out=ntok_out, 
+                price1k_in = 0.01, price1k_out = 0.03)
+
+c1_gpt4t
+
+# Cost of a 15 minute survey response with California minimum wage $16.00/hour 
+c1_human = 16/60 * 1
+c1_human
+
+
+
+# Cost of mixed subjects experiment as a percentage of human subjects experiment
+psaving07 = pcost(.rho=0.7, .cf=c1_gpt4t, .cY=c1_human, .verbose = T)
+round(100*psaving07,1)
+
+psaving09 = pcost(.rho=0.9, .cf=c1_gpt4t, .cY=c1_human, .verbose = T)
+round(100*psaving09,1)
+
+psaving09 = pcost(.rho=0.9, .cf=c1_gpt4t/4, .cY=c1_human, .verbose = T)
+
+# here compute the factor by which the cost of LLM need to decrease to ahcieve the same reduction in cost of the experimtn
+# report the ratio 1/gamma again
+
+
+
 ###############################################################################
 # PPI experiments are cheaper for cheaper algorithms and higher PPI correlation
 ###############################################################################
 
 title = bquote(paste("Cost of predicting a response as a\nshare of recruiting a human subject (", gamma, ")"))
 
-dd = expand.grid(rho = c(0.1, 0.3, 0.5, 0.7, 0.9),
-                 cf = 1/seq(1, 500, length.out = 200),
-                 cY = 1) %>% 
-  mutate(pcost = pcost(.cf = cf, .cY = cY, .rho = rho), 
-         gamma = cf / cY, 
-         gamma_formatted = paste0(100*gamma, "%"),
-         is_sufficient = ifelse(rho > (2*sqrt(gamma)) / (1+gamma), 1, 0), 
-         pcost = ifelse(!is_sufficient, 0, pcost)
-  ) %>% 
-  filter(!is.na(pcost))
 
-p_cost = ggplot(dd, aes(1/gamma, 1-pcost, color = factor(rho), linetype = factor(rho))) +
+# When gamma is not sufficiently large the mixed subjects experiment is 100% of the cost of a human subjects experiment
+dd = expand.grid(
+  rho = c(0.1, 0.3, 0.5, 0.7, 0.9),
+  cf = 1/seq(1, 500, length.out = 200),
+  cY = 1) %>% 
+  mutate(
+    pcost = pcost(.cf = cf, .cY = cY, .rho = rho), 
+    gamma = cf / cY, 
+    is_sufficient = ifelse(rho > (2*sqrt(gamma)) / (1+gamma), 1, 0), 
+    pcost = ifelse(!is_sufficient, 1, pcost)
+  )
+
+p_cost = ggplot(dd, aes(1/gamma, pcost, color = factor(rho), linetype = factor(rho))) +
   geom_line(linewidth = 0.9) +
   scale_y_continuous(
     labels = scales::percent_format(accuracy = 1), 
@@ -311,7 +341,7 @@ p_cost = ggplot(dd, aes(1/gamma, 1-pcost, color = factor(rho), linetype = factor
   ) +
   labs(
     x = bquote("Predictions affordable for every gold-standard observation"~1/gamma), 
-    y = "Cost of PPI experiment as % of classical experiment"
+    y = "Cost of mixed subjects as percentage of human subjects experiment   "
   ) +
   theme(
     legend.position = "right",
