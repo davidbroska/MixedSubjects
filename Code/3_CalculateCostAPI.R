@@ -286,7 +286,7 @@ c1_gpt4t = cost(nprompt=1, ntok_in=ntok_in, ntok_out=ntok_out,
 
 c1_gpt4t
 
-# Cost of a 15 minute survey response with California minimum wage $16.00/hour 
+# Cost of a 1 minute survey response with California minimum wage $16.00/hour 
 c1_human = 16/60 * 1
 c1_human
 
@@ -298,11 +298,6 @@ round(100*psaving07,1)
 
 psaving09 = pcost(.rho=0.9, .cf=c1_gpt4t, .cY=c1_human, .verbose = T)
 round(100*psaving09,1)
-
-psaving09 = pcost(.rho=0.9, .cf=c1_gpt4t/4, .cY=c1_human, .verbose = T)
-
-# here compute the factor by which the cost of LLM need to decrease to ahcieve the same reduction in cost of the experimtn
-# report the ratio 1/gamma again
 
 
 
