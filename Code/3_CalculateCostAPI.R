@@ -193,15 +193,15 @@ c_gpt35 = cost(nprompt=nprompt, ntok_in=ntok_in, ntok_out=ntok_out,
                price1k_in = 0.0005, price1k_out = 0.0015)
 
 # gpt-4-turbo: 71.41$ for API 22315 calls
-c_gpt4t = cost(nprompt=5000, ntok_in=ntok_in, ntok_out=ntok_out, 
+c_gpt4t = cost(nprompt=600000, ntok_in=ntok_in, ntok_out=ntok_out, 
                price1k_in = 0.01, price1k_out = 0.03)
+writeLines(paste0("gpt-4-turbo: ",round(c_gpt4t,2),"$ for ",nprompt," API calls."))
 
 # gpt-4o: 35.7$ for API 22315 calls
 c_gpt4o = cost(nprompt=nprompt, ntok_in=ntok_in, ntok_out=ntok_out, 
                price1k_in = 0.00250 , price1k_out = 0.00125)
 
 writeLines(paste0("gpt-3.5-turbo-0125: ",round(c_gpt35,2),"$ for ",nprompt," API calls."))
-writeLines(paste0("gpt-4-turbo: ",round(c_gpt4t,2),"$ for ",nprompt," API calls."))
 writeLines(paste0("gpt-4o: ",round(c_gpt4o,2),"$ for ",nprompt," API calls."))
 writeLines(paste0("Total cost: ", round(sum(c(c_gpt35,c_gpt4t,c_gpt4o)),2),"$."))
 
@@ -254,7 +254,6 @@ pcost = function(.rho, .cf, .cY, .verbose=F){
   # cost of silicon sampling as a share of sampling human responses
   gamma =  .cf / .cY
   
-  
   # Check is rho sufficiently large
   minimum_rho = (2*sqrt(gamma)) / (1+gamma)
   is_sufficient = .rho > minimum_rho
@@ -262,18 +261,18 @@ pcost = function(.rho, .cf, .cY, .verbose=F){
   # Print warning if not
   if(any(!is_sufficient)) print("Rho is not sufficiently large for some cases.")
   
-  # Calculate the % of the costs saved when conducting when conducting a mixed rather than human subjects experiment
-  pcost_saved = .rho^2 - gamma * .rho^2 - 2*sqrt(gamma * .rho^2 * (1-.rho^2))
-  
   # Calculate the costs of a mixed subjects experiment as a percentage of a human subjects experiment
-  pcost = 1 - pcost_saved
-
+  pcost = 1 - .rho^2*(1-gamma) + 2*sqrt(gamma * .rho^2 * (1-.rho^2))
+  
+  # Percentage of cost of a human subjects experiment if silicon subjects incur no cost
+  pcost_gamma0 = 1 - .rho^2*(1-0) + 2*sqrt(0 * .rho^2 * (1-.rho^2))
   
   if(.verbose){
-    print(paste0("Cost of silicon subject as percentage of the costs for a human subject: ", 100 * gamma, "%"))
-    print(paste0("Silicon subjects responses affordable for human subject response: ", 1/gamma))
-    print(paste0("Minimum PPI correlation: ", round(minimum_rho,3)))
-    print(paste0("Percentage of cost of a human subjects experiment: ", round(100*pcost,2),"%"))
+    writeLines(paste0("Cost of silicon subject as percentage of the costs for a human subject: ", round(100 * gamma,2), "%"))
+    writeLines(paste0("Silicon subjects responses affordable for human subject response: ", round(1/gamma)))
+    writeLines(paste0("Minimum PPI correlation to save cost in a mixed subjects experiment: ", round(minimum_rho,3)))
+    writeLines(paste0("Percentage of cost of a human subjects experiment: ", round(100*pcost,2),"%"))
+    writeLines(paste0("Percentage of cost of a human subjects experiment if silicon subjects incur no cost: ", round(100*pcost_gamma0,2),"%"))
   }
   
   return(pcost)

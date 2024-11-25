@@ -54,11 +54,11 @@ main.Saved = calculate_amce(mms,"Saved")
 # AMCE for GPT4 Turbo
 main.gpt4turbo_wp_Saved = calculate_amce(mms,"gpt4turbo_wp_Saved_1")
 
-# AMCE for GPT 4o
-main.gpt4o_wp_Saved = calculate_amce(mms,"gpt4o_wp_Saved_1") 
-
-# AMCE for GPT3.5 Turbo
-main.gpt35turbo0125_wp_Saved = calculate_amce(mms,"gpt35turbo0125_wp_Saved_1") 
+# # AMCE for GPT 4o
+# main.gpt4o_wp_Saved = calculate_amce(mms,"gpt4o_wp_Saved_1") 
+# 
+# # AMCE for GPT3.5 Turbo
+# main.gpt35turbo0125_wp_Saved = calculate_amce(mms,"gpt35turbo0125_wp_Saved_1") 
   
 # AMCEs reported by Awad et al (2018) based responses from US and other countries 
 main.Awad2018 = tribble(
@@ -77,10 +77,8 @@ main.Awad2018 = tribble(
 # Create labels for plot
 cols = tribble(
   ~dv,                       ~Color,    ~Label, 
-  "gpt4turbo_wp_Saved_1",      "#223c56", "GPT-4 Turbo ",
-  "gpt4o_wp_Saved_1",          "#4477AA", "GPT-4o ", 
-  "gpt35turbo0125_wp_Saved_1", "#9fbcd9", "GPT-3.5 Turbo ",
-  "Saved",                   "#DDCC77", " \nMoral Machine\nQuota Sample\n ",
+  "gpt4turbo_wp_Saved_1",      "#4477AA", "Silicon Sampling\n(GPT-4 Turbo) ",
+  "Saved",                   "#DDCC77", " \nMoral Machine\nSample\n ",
   "Awad2018",                "#CC6677", " \nAwad et al.\n(2018)\n "
   ) %>%  
 mutate(dv = factor(dv,ordered = T))
@@ -90,8 +88,6 @@ mutate(dv = factor(dv,ordered = T))
 amces = main.Saved %>% 
   bind_rows(main.Awad2018) %>% 
   bind_rows(main.gpt4turbo_wp_Saved) %>% 
-  bind_rows(main.gpt4o_wp_Saved) %>% 
-  bind_rows(main.gpt35turbo0125_wp_Saved) %>% 
   mutate(
     dv = factor(dv,levels=cols$dv), 
     label = factor(label,levels=colors$Variable[nrow(colors):1], labels=colors$Label[nrow(colors):1])
@@ -322,6 +318,8 @@ for (n in seq_along(ns)) {
 ###############################################################
 # Analysis of prediction error 
 ###############################################################
+
+
 scipen(99999)
 scale2 = function(.var){
   # scale by 2 standard deviations 

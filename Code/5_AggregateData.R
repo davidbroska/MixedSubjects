@@ -11,17 +11,23 @@ mms = read_csv("Data/2_SurveySample.csv.gz") %>%
 ############################
 
 # Read files from data folder
-files = list.files("Data/",pattern = "^4_.*[.]csv[.]gz$")
+files = list.files("Data/",pattern = "^4_.*[0-9]{8}[.]csv[.]gz$")
+files = list.files("Data/",pattern = "^4_.*[0-9]{8}_[0-9]r[.]csv[.]gz$")
+
+files = c("4_gpt4turbo_wp_20241118.csv.gz",
+          "4_gpt35turbo0125_wp_20240603.csv.gz",
+          "4_gpt4o_wp_20240603.csv.gz",
+          "4_claude35sonnet20241022_wp_20241115.csv.gz")
 
 # Assign number to prediction if LLM was prompted multiple times
 files_df = tibble(files) %>% 
-  mutate(model = str_remove(files, "_[0-9]+.csv.gz"),
-         date = str_extract(files,"_[0-9]+.csv.gz") %>% str_remove_all("[._a-z]+")) %>% 
+  mutate(model = str_remove(files, "_[0-9]+(_[0-9]r)?.csv.gz"),
+         date =  str_extract(files,"_[0-9]+(_[0-9]r)?.csv.gz") %>% str_remove_all("[._a-z]+")) %>% 
   group_by(model) %>% 
   arrange(model,date) %>% 
   mutate(nth_prediction = 1:n()) %>% 
   ungroup()
-
+files_df
 
 # Aggregate files
 df_list = list()
@@ -45,7 +51,7 @@ for(r in 1:nrow(files_df)){
   icol = str_which(colnames(dd), ".Saved")
   colnames(dd)[icol] = paste0(colnames(dd)[icol], "_", nth)
   
-  # Append dataframe to list
+  # Append data frame to list
   df_list[[r]] = dd
   
 }
@@ -57,6 +63,7 @@ df = df_list %>%
   full_join(mms, ., by=colnames(mms)) %>% 
   # keep rows with at least one outcome value predicted by LLM
   filter(if_any(matches("p_Saved_"), ~!is.na(.)))
+
 
 
 ##############################
@@ -115,7 +122,8 @@ find_mode = function(.data, .vars, .na_rm=F){
 # df %>% select(all_of(c(gpt4o_wp_reps,"gpt4o_wp_Saved_mode"))) %>% head()
 
 # Check for NA values
-summarize(df,across(matches("wp_Saved"), ~sum(is.na(.))))
+summarize(df,across(matches("wp_Saved"), ~sum(is.na(.)))) %>% 
+  pivot_longer(cols = everything(), names_to="model", values_to="NA_count")
 
 # Save file with predictions from LLMs
 write_csv(df,"Data/5_SurveySampleLLM.csv.gz")
