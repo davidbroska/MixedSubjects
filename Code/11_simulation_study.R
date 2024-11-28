@@ -1,5 +1,5 @@
 # Load functions
-source("Code/1_Functions.R")
+source("Code/RFunctions.R")
 
 # Define custom colors and line types
 custom_colors = c("Silicon Sampling" = "#1f78b4","Prediction-Powered Inference" = "#33a02c")
