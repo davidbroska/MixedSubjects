@@ -239,7 +239,7 @@ mean(DiffPP$AvgAbsDiffMMS)
 cols = tribble(
   ~var,     ~col,      ~lab, 
   "mmsFreq",  "#CC6677", "\nMoral Machine U.S. Sample\n",
-  "acsFreq",  "#888888", "\nAmerican Community Survey 2016\n") %>% 
+  "acsFreq",  "#66aacc", "\nAmerican Community Survey 2016\n") %>% 
   mutate(lab = str_replace_all(lab," ","\n"),
          var = factor(var,ordered = T))
 
@@ -271,9 +271,6 @@ DemPlot = FreqLong %>%
     breaks = cols$var, 
     values = cols$col, 
     labels = cols$lab
-  ) +
-  theme(
-    
   ) +
   labs(
     fill = "Dataset", 
