@@ -1378,14 +1378,13 @@ def loop_attribute(x):
     df = pd.read_csv("../Data/4_gpt4turbo_wp_20241118.csv.gz")
 
     # sample size of human subjects
-    ns= [10000]
+    ns = [10000]
 
     # multiples of human subjects sample size
-    ks = list([0.1, 0.25, 0.5, 0.75, 1]) + list(np.arange(2, 102, 2))
-    print(ks)
-
+    ks = list([0.1, 0.25, 0.5, 0.75]) + list(np.arange(1, 10.5, 0.5))
+    
     # number of repetitions for combinations of n and N
-    reps = 1
+    reps = 500
 
     # LLM predictions
     y= "gpt4turbo_wp_Saved"

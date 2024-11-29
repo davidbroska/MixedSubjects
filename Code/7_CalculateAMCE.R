@@ -21,14 +21,24 @@ colors = tribble(
 ##############################################
 
 # Load data with responses from human subjects and predicted responses
-mms = get_filepath("5_SurveySampleLLM.csv.gz") %>% 
+mms = get_filepath("2_SurveySample.csv.gz") %>% 
+  fread() %>% 
+  PreprocessProfiles()
+
+gpt4t = get_filepath("4_gpt4turbo_wp_20241118.csv.gz") %>% 
   fread() %>% 
   PreprocessProfiles()
 
 
+nrow(mms)==nrow(gpt4t)
+
+all(mms$ResponseID %in% gpt4t$ResponseID)
+all(gpt4t$ResponseID %in% mms$ResponseID)
+
+
 # Count NAs on dependent variables
-dvs = c("Saved","gpt4turbo_wp_Saved_1","gpt4o_wp_Saved_1","gpt35turbo0125_wp_Saved_1")
-summarise(mms,across(all_of(dvs), ~ sum(is.na(.))))
+summarise(mms,across(all_of("Saved"), ~ sum(is.na(.))))
+summarise(gpt4t,across(all_of(c("Saved","gpt4turbo_wp_Saved")), ~ sum(is.na(.))))
 
 
 # Define function to calculate AMCE
@@ -51,14 +61,16 @@ calculate_amce = function(profiles, depvar){
 # AMCE for human subjects
 main.Saved = calculate_amce(mms,"Saved")
 
-# AMCE for GPT4 Turbo
-main.gpt4turbo_wp_Saved = calculate_amce(mms,"gpt4turbo_wp_Saved_1")
+# Output referenced in Python script
+mutate(main.Saved, across(where(is.numeric), ~ round(.,3))) %>% kable()
 
-# # AMCE for GPT 4o
-# main.gpt4o_wp_Saved = calculate_amce(mms,"gpt4o_wp_Saved_1") 
-# 
-# # AMCE for GPT3.5 Turbo
-# main.gpt35turbo0125_wp_Saved = calculate_amce(mms,"gpt35turbo0125_wp_Saved_1") 
+# Save csv
+write_csv(main.Saved, paste0(get_filepath("Data"),"/7_AmceParamsSimulationR.csv.tar"))
+
+
+# AMCE for GPT4 Turbo
+main.gpt4turbo_wp_Saved = calculate_amce(gpt4t,"gpt4turbo_wp_Saved")
+
   
 # AMCEs reported by Awad et al (2018) based responses from US and other countries 
 main.Awad2018 = tribble(
@@ -77,11 +89,11 @@ main.Awad2018 = tribble(
 # Create labels for plot
 cols = tribble(
   ~dv,                       ~Color,    ~Label, 
-  "gpt4turbo_wp_Saved_1",      "#4477AA", "Silicon Sampling\n(GPT-4 Turbo) ",
-  "Saved",                   "#DDCC77", " \nMoral Machine\nSample\n ",
-  "Awad2018",                "#CC6677", " \nAwad et al.\n(2018)\n "
-  ) %>%  
-mutate(dv = factor(dv,ordered = T))
+  "Awad2018",                "#DDCC77", " \nAwad et al.\n(2018)\n ",
+  "gpt4turbo_wp_Saved",      "#4477AA", " \nSilicon Subjects\nU.S. Sample\n",
+  "Saved",                   "#CC6677", " \nHuman Subjects\nU.S. Sample\n ",
+) %>%  
+  mutate(dv = factor(dv,ordered = T))
 
 
 # Create dataframe storing all AMCEs
@@ -112,6 +124,9 @@ ggplot(amces, aes(x=amce, y=label, xmin=conf.low, xmax=conf.high, fill=dv)) +
     x="AMCE with 95% confidence intervals", 
     y="Attribute of Scenario"
   ) +
+  guides(
+    fill = guide_legend(reverse = T)
+  ) +
   theme(
     axis.text.y = element_text(size = 9),
     axis.title.x = element_text(size = 11),
@@ -123,9 +138,9 @@ ggsave(filename="Figures/8_AMCEs.pdf",width=7,height=5)
 
 
 
-###############################################################
-# Compare AMCE estimate from PPI with WLS in Moral Machine Data
-###############################################################
+#####################################################################
+# Simulation to compare AMCEs from PPI with WLS in Moral Machine Data
+#####################################################################
 
 # Load association between predicted and observed responses
 rhos = read_csv("Data/7_rho.csv", col_select = c("x","y","ppi_corr"))

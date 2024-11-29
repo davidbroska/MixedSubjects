@@ -2,9 +2,9 @@
 source("Code/RFunctions.R")
 
 
-################################################################################
-# Awad et al. (2018) -----------------------------------------------------------
-################################################################################
+#############################################################
+# Prepare US sample with demographics from Awad et al. (2018)
+#############################################################
 
 # Download data from https://osf.io/3hvt2/?view_only=4bb49492edee4a8eb1758552a362a2cf
 profiles.S = get_filepath("SharedResponsesSurvey.csv.tar") %>% 
@@ -118,12 +118,12 @@ all(count(mms,ResponseID)$n == 2)
 summarize_all(mms, ~ sum(is.na(.)))
 
 # Save data 
-write_csv(mms,paste0(get_filepath("Data"),"/2_SurveySample.csv.gz"))
+# write_csv(mms,paste0(get_filepath("Data"),"/2_SurveySample.csv.gz"))
 
 
-################################################################################
-# American Community Survey ----------------------------------------------------
-################################################################################
+################################################################
+# Prepare data from the American Community Survey for comparison 
+################################################################
 
 # Read data with survey responses and apply exclusion criteria from Awad et al
 acs = get_filepath("usa_00004.csv.gz") %>% 
@@ -173,8 +173,11 @@ acsPerc = acs %>%
   ungroup() %>% 
   mutate(ACSfreq = ACSn/sum(ACSn))
 
-# Check that there are no missings
+# Check that there are no missing values
 summarize_all(acsPerc, ~ sum(is.na(.)))
+
+
+
 
 
 ################################################################################
@@ -222,21 +225,21 @@ FreqWide = GenderFreq %>%
   bind_rows(IncomeFreq) %>% 
   mutate(absDiffmms = abs(acsFreq - mmsFreq))
 
-# Mean absolute difference across variables
-mean(DiffPP$AvgAbsDiffMMS)
-
 # Calculate mean absolute difference in percentage points per variable
 DiffPP = FreqWide %>% 
   group_by(Variable) %>% 
   summarise(AvgAbsDiffMMS = mean(absDiffmms))
 DiffPP
 
+# Mean absolute difference across variables
+mean(DiffPP$AvgAbsDiffMMS)
+
 
 # Create bar plot with relative frequencies of demographics
 cols = tribble(
   ~var,     ~col,      ~lab, 
-  "mmsFreq",  "#4477AA", " Moral Machine Sample ",
-  "acsFreq",  "#CC6677", " American Community Survey ") %>% 
+  "mmsFreq",  "#CC6677", "\nMoral Machine U.S. Sample\n",
+  "acsFreq",  "#888888", "\nAmerican Community Survey 2016\n") %>% 
   mutate(lab = str_replace_all(lab," ","\n"),
          var = factor(var,ordered = T))
 
@@ -259,299 +262,26 @@ DemPlot = FreqLong %>%
   labs(fill = "Dataset",x="",y="Relative frequency") +
   theme(axis.text.x = element_text(size = 9.5))
 
+DemPlot = FreqLong %>% 
+  ggplot(aes(Level, value, fill = name)) +
+  geom_col(position = position_dodge(), width = 0.5) +
+  facet_wrap(~ Variable, scales = "free_x",
+             labeller = labeller(Variable = labell)) +
+  scale_fill_manual(
+    breaks = cols$var, 
+    values = cols$col, 
+    labels = cols$lab
+  ) +
+  theme(
+    
+  ) +
+  labs(
+    fill = "Dataset", 
+    x = "", 
+    y = "Relative frequency"
+  ) 
+DemPlot
+
 # Save plot
 ggsave(DemPlot,filename=paste0(get_filepath("Figures"),"/2_DemographicDistribution.pdf"),width=9,height=6)
-
-
-
-
-# Joined -----------------------------------------------------------------------
-
-PreprocessProfiles = function(profiles){
-  profiles[,Saved := as.numeric(Saved)]
-  profiles[,ScenarioType := as.factor(ScenarioType)]
-  profiles[,AttributeLevel := factor(AttributeLevel, 
-                                     levels=c("Rand",
-                                              "Male","Female",
-                                              "Fat","Fit",
-                                              "Low","High",
-                                              "Old","Young",
-                                              "Less","More",
-                                              "Pets","Hoomans"))]
-  profiles[,Barrier := factor(Barrier, levels=c(1,0))]
-  profiles[,CrossingSignal := factor(CrossingSignal, levels=c(0,2,1))]
-  profiles[,ScenarioType := as.factor(ScenarioType)]
-  profiles[,ScenarioTypeStrict := as.factor(ScenarioTypeStrict)]
-  return(profiles)
-}
-
-
-
-calcWeightsActual = function(Tr, X){
-  T10 = ifelse(Tr==levels(factor(Tr))[2],1,0)
-  d = as.numeric(ave(X, X, T10, FUN = length))
-  w = max(d)/d
-  return(w)
-}
-
-calcWeightsTheoretical = function(profiles){
-  p = apply(profiles,1,CalcTheoreticalInt)
-  return(1/p)
-}
-
-CalcTheoreticalInt = function(X){
-  if (X["Intervention"]==0){
-    if (X["Barrier"]==0){
-      if (X["PedPed"] == 1) p = 0.48
-      else p = 0.32
-      
-      if (X["CrossingSignal"]==0) p = p*0.48
-      else if (X["CrossingSignal"]==1) p = p*0.2
-      else p = p * 0.32
-    }
-    else p = 0.2
-  }
-  else {
-    if (X["Barrier"]==0){
-      if (X["PedPed"] == 1) {
-        p = 0.48
-        if (X["CrossingSignal"]==0) p = p*0.48
-        else if (X["CrossingSignal"]==1) p = p*0.32
-        else p = p * 0.2
-      }
-      else {
-        p = 0.2
-        if (X["CrossingSignal"]==0) p = p*0.48
-        else if (X["CrossingSignal"]==1) p = p*0.2
-        else p = p * 0.32
-      }
-    }
-    else p = 0.32
-  }
-  return(p)
-}
-
-
-########################################
-############ Main Effects ##############
-########################################
-# Main effect sizes
-GetMainEffectSizes = function(profiles,savedata,r,depvar="Saved"){
-  profiles$dv = profiles[[depvar]]
-  Coeffs = matrix(NA,r,2)
-  AttLevels = levels(profiles$AttributeLevel)
-  lev = levels(profiles$ScenarioType)
-  if (levels(profiles$ScenarioType)[1]=="") lev = levels(profiles$ScenarioType)[2:8]
-  #lev = lev[c(3,2,4,1,6,5)]
-  lev = c("Gender", "Fitness", "Social Status", "Age", "Utilitarian", "Species")
-  #gender fitness social age uti spec
-  # Six factors (gender, fitness, Social Status, age, utilitarianism, age, and species)
-  
-  # For intervention
-  profiles$BC.weights = calcWeightsTheoretical(profiles)
-  lm.Int = lm(dv ~as.factor(Intervention), data=profiles, weights = BC.weights)
-  summary.lm.Int = summary(lm.Int)
-  Coeffs[1,1] = lm.Int$coefficients[[2]]
-  Coeffs[1,2] = summary.lm.Int$coefficients[2, "Std. Error"]
-  
-  # For relationship to vehicle 
-  ## Consider only 'no legality' (CrossingSignal==0) and 'passengers vs. pedestrians' (PedPed==0)
-  profile.Relation = profiles[which(profiles$CrossingSignal==0 & profiles$PedPed==0),]
-  profile.Relation$BC.weights = calcWeightsTheoretical(profile.Relation)
-  lm.Rel = lm(dv ~as.factor(Barrier), data=profile.Relation, weights = BC.weights)
-  summary.lm.Rel = summary(lm.Rel)
-  Coeffs[2,1] = lm.Rel$coefficients[[2]]
-  Coeffs[2,2] = summary.lm.Rel$coefficients[2, "Std. Error"]
-  
-  # Legality 
-  ## Exclude 'no legality' (CrossingSignal!=0) and consider only 'pedestrians vs. pedestrians' (PedPed==1)
-  profile.Legality = profiles[which(profiles$CrossingSignal!=0 & profiles$PedPed==1),]
-  profile.Legality$CrossingSignal = factor(profile.Legality$CrossingSignal,
-                                            levels=levels(profiles$CrossingSignal)[2:3])
-  profile.Legality$BC.weights = calcWeightsTheoretical(profile.Legality)
-  lm.Leg = lm(dv ~as.factor(CrossingSignal), data=profile.Legality, weights = BC.weights)
-  summary.lm.Leg = summary(lm.Leg)
-  Coeffs[3,1] = lm.Leg$coefficients[[2]]
-  Coeffs[3,2] = summary.lm.Leg$coefficients[2, "Std. Error"]
-  
-  # Six factors (gender, fitness, Social Status, age, utilitarianism, age, and species)
-  ## Extract data subsets and run regression for each
-  for(i in 1:6){
-    Temp = profiles[which(profiles$ScenarioType==lev[i] & profiles$ScenarioTypeStrict==lev[i]),]
-    Temp$AttributeLevel = factor(Temp$AttributeLevel, levels=AttLevels[(i*2):(i*2+1)])
-    Temp$BC.weights = calcWeightsTheoretical(Temp)    
-    lm.Temp = lm(dv ~ as.factor(AttributeLevel), data=Temp, weights = BC.weights)
-    summary.lm.Temp = summary(lm.Temp)
-    #print(summary.lm.Temp)
-    Coeffs[i+3,1] = lm.Temp$coefficients[[2]]
-    Coeffs[i+3,2] = summary.lm.Temp$coefficients[2, "Std. Error"]
-    
-    # Save to a data frame
-    if(savedata){
-      var.name = paste("profile",gsub(" ","",lev[i]),sep=".")
-      assign(var.name,Temp)
-    }
-  }
-  return(Coeffs)
-}
-
-# Prepare plotted dataset
-GetPlotData = function(Coeffs,isMainFig,r){
-  # Convert to dataframe and add labels
-  plotdata = as.data.frame(Coeffs)
-  colnames(plotdata)=c("Estimates","se")
-  plotdata$Label = c("Preference for action -> \n Preference for inaction",
-                      "Sparing Passengers -> \n Sparing Pedestrians",
-                      "Sparing the Unlawful -> \n Sparing the Lawful",
-                      "Sparing Males -> \n Sparing Females",
-                      "Sparing the Large -> \n Sparing the Fit",
-                      "Sparing Lower Status -> \n Sparing Higher Status",
-                      "Sparing the Elderly -> \n Sparing the Young",
-                      "Sparing Fewer Characters -> \n Sparing More Characters",
-                      "Sparing Pets -> \n Sparing Humans") 
-  if(isMainFig)
-    plotdata$Label = c("Intervention",
-                        "Relation to AV",
-                        "Law",
-                        "Gender",
-                        "Fitness",
-                        "Social Status",
-                        "Age",
-                        "No. Characters",
-                        "Species") 
-  
-  
-  plotdata$Label = factor(plotdata$Label,as.ordered(plotdata$Label[match(sort(plotdata$Estimates[1:r]),
-                                                                          plotdata$Estimates[1:r])]))
-  plotdata$Label = factor(plotdata$Label,levels = rev(levels(plotdata$Label)))
-  
-  plotdata$Estimates = as.numeric(as.character(plotdata$Estimates))
-  plotdata$se = as.numeric(as.character(plotdata$se))
-  
-  return(plotdata)
-}
-
-# Effect of difference in number of characters within Utilitarian dimension
-## Subclass by diff in number of characters
-GetMainEffectSizes.Util = function(profiles,depvar="Saved"){
-  profiles$dv = profiles[[depvar]]
-  Coeffs = matrix(NA,4,2)
-  AttLevels = levels(profiles$AttributeLevel)
-  for(i in 1:4){
-    Temp = profiles[which(profiles$ScenarioType== "Utilitarian" & 
-                           profiles$ScenarioTypeStrict== "Utilitarian" & 
-                           profiles$DiffNumberOFCharacters==i),]
-    Temp$AttributeLevel = factor(Temp$AttributeLevel, levels=AttLevels[10:11])
-    Temp$BC.weights = calcWeightsTheoretical(Temp)
-    lm.Signed.NoC.Util = lm(dv ~as.factor(AttributeLevel), data=Temp, weights = BC.weights)
-    summary.lm.Signed.NoC.Util = summary(lm.Signed.NoC.Util)
-    Coeffs[i,1] = lm.Signed.NoC.Util$coefficients[[2]]
-    Coeffs[i,2] = summary.lm.Signed.NoC.Util$coefficients[2, "Std. Error"]
-  }
-  return(Coeffs)
-}
-
-GetPlotData.Util = function(Coeffs){
-  plotdata = as.data.frame(Coeffs)
-  colnames(plotdata)=c("Estimates","se")
-  plotdata$Variant = c(1:4)
-  plotdata$Variant = factor(plotdata$Variant,levels=rev(plotdata$Variant))
-  plotdata$Label = as.factor(rep("No. Characters",4))
-  return(plotdata)
-}
-
-PlotAndSave = function(plotdata.main,isMainFig,filename,plotdata.util, .title = ""){
-  #label_order = c("Intervention", "Relation to AV", "Gender", "Fitness", 
-  #"Social Status", "Law", "Age", "No. Character", "Species")
-  #plotdata.bars$Label = factor(plotdata.bars$Label, levels = label_order)
-  #plotdata.points$Label = factor(plotdata.points$Label, levels = label_order)
-  #plotdata.util$Label = factor(plotdata.util$Label, levels = label_order)
-  
-  plotdata.main.human = data.frame(
-    Estimates = c(0.061, 0.097, 0.353, 0.119, 0.160, 0.345, 0.497, 0.651, 0.585),
-    Label = c("Intervention", "Relation to AV", "Law", "Gender", "Fitness", 
-              "Social Status", "Age", "No. Characters", "Species")
-  )
-  
-  plotdata.bars = plotdata.main[plotdata.main$Label != "No. Characters", ]
-  plotdata.points = plotdata.main[plotdata.main$Label == "No. Characters", ]
-  
-  gg = ggplot() +
-  geom_col(data = plotdata.bars, aes(x=Label, y=Estimates), width=0.5, fill = "gray", color = "black") +
-  geom_errorbar(data = plotdata.bars, aes(x=Label, ymin=Estimates-se, ymax=Estimates+se), width = 0.2) +
-  geom_col(data = plotdata.util[abs(plotdata.util$Estimates) == max(abs(plotdata.util$Estimates)),], 
-           aes(x = Label, y = Estimates), fill = "gray", color = "black", width = 0.5) +
-  geom_errorbar(data = plotdata.points, aes(x=Label, ymin=Estimates-se, ymax=Estimates+se), width= 0.2) +
-  geom_point(data = plotdata.points, aes(x=Label, y=Estimates), color = "black", size = 3) +
-  geom_errorbar(data = plotdata.util, aes(x = Label, ymin = Estimates - se, ymax = Estimates + se), width = 0.2) +
-  geom_point(data = plotdata.util, aes(x = Label, y = Estimates), size = 3, color = "black", fill = "white", shape=21) +
-  geom_text(data = plotdata.util, aes(x = Label, y = Estimates, label = Variant), hjust = 0.5, vjust = 0.5, size = 3, color = "black") +
-  geom_hline(yintercept = 0, linetype="solid", color = "black", linewidth=0.4) +
-  geom_point(data = plotdata.main.human, aes(x = Label, y = Estimates), color = "red", size = 3, shape = '|') +
-  scale_y_continuous(limits = c(-0.5, 1.2),breaks = seq(0, 1, .2)) +
-  xlab("") +
-  ylab(expression(paste("\n",Delta,"P"))) +
-  coord_flip() +
-  annotate("text", x = "Intervention", y = -0.5, label = "Action", hjust = "left", vjust = "center", color = "black", size = 3) +
-  annotate("text", x = "Intervention", y = 1.2, label = "Inaction", hjust = "right", vjust = "center", color = "black", size = 3) +
-  annotate("text", x = "Relation to AV", y = -0.5, label = "Passengers", hjust = "left", vjust = "center", color = "black", size = 3) +
-  annotate("text", x = "Relation to AV", y = 1.2, label = "Pedestrians", hjust = "right", vjust = "center", color = "black", size = 3) +
-  annotate("text", x = "Law", y = -0.5, label = "Unlawful", hjust = "left", vjust = "center", color = "black", size = 3) +
-  annotate("text", x = "Law", y = 1.2, label = "Lawful", hjust = "right", vjust = "center", color = "black", size = 3) +
-  annotate("text", x = "Gender", y = -0.5, label = "Males", hjust = "left", vjust = "center", color = "black", size = 3) +
-  annotate("text", x = "Gender", y = 1.2, label = "Females", hjust = "right", vjust = "center", color = "black", size = 3) +
-  annotate("text", x = "Fitness", y = -0.5, label = "Large", hjust = "left", vjust = "center", color = "black", size = 3) +
-  annotate("text", x = "Fitness", y = 1.2, label = "Fit", hjust = "right", vjust = "center", color = "black", size = 3) +
-  annotate("text", x = "Social Status", y = -0.5, label = "Low status", hjust = "left", vjust = "center", color = "black", size = 3) +
-  annotate("text", x = "Social Status", y = 1.2, label = "High status", hjust = "right", vjust = "center", color = "black", size = 3) +
-  annotate("text", x = "Age", y = -0.5, label = "Old", hjust = "left", vjust = "center", color = "black", size = 3) +
-  annotate("text", x = "Age", y = 1.2, label = "Young", hjust = "right", vjust = "center", color = "black", size = 3) +
-  annotate("text", x = "No. Characters", y = -0.5, label = "Few", hjust = "left", vjust = "center", color = "black", size = 3) +
-  annotate("text", x = "No. Characters", y = 1.2, label = "More", hjust = "right", vjust = "center", color = "black", size = 3) +
-  annotate("text", x = "Species", y = -0.5, label = "Pets", hjust = "left", vjust = "center", color = "black", size = 3) +
-  annotate("text", x = "Species", y = 1.2, label = "Humans", hjust = "right", vjust = "center", color = "black", size = 3) +
-  theme(
-    axis.text.y = element_text(angle = 45, hjust = 1),
-    aspect.ratio = 0.5,
-    axis.title = element_text(size = 10, color="black"),
-    axis.text = element_text(size = 10, color="black")) +
-    labs(subtitle = .title) +
-    theme_bw(base_line_size = 0.2)
-  
-  ggsave(paste0(filename, ".pdf"), plot = gg, width = 9, height = 6)
-  gg
-}
-
-
-computeACME = function(.profiles,.depvar){
-  
-  profiles = PreprocessProfiles(.profiles)
-  
-  profiles = profiles[ which(!is.na(profiles[[.depvar]])) ]
-  print(paste0("Number of observations: ",nrow(profiles)/2))
-  
-  # Compute ACME values for joined data
-  Coeffs.main = GetMainEffectSizes(profiles,T,9, depvar=.depvar)
-  plotdata.main = GetPlotData(Coeffs.main,T,9)
-  
-  # Compute additional ACME values
-  Coeffs.util = GetMainEffectSizes.Util(profiles,depvar=.depvar)
-  plotdata.util = GetPlotData.Util(Coeffs.util)
-  
-  l = list(plotdata.main, plotdata.util)
-  names(l) = c("main","util")
-  return(l)
-}
-
-Saved = computeACME(data.table(mms),"Saved")
-Saved$main %>% mutate(
-  lower = Estimates - 1.96 * se,
-  upper = Estimates + 1.96 * se,
-)
-ptitle = paste0("Human respondents (",length(unique(mms$UserID))," US respondents, ", length(unique(mms$ResponseID))," Decisions)")
-pSaved = PlotAndSave(Saved$main, T, paste0(get_filepath("Figures"),"/2_AMCE_QuotaSample"), Saved$util,ptitle)
-pSaved
-
-
-
 

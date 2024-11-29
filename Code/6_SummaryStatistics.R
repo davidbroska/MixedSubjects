@@ -2,10 +2,9 @@
 source("Code/RFunctions.R")
 
 # Load data
-gpt4t = read_csv("Data/4_gpt4turbo_wp_20241118.csv.gz")
-gpt4o = read_csv("Data/4_gpt4o_wp_20240603.csv.gz")
-gpt35 = read_csv("Data/4_gpt35turbo0125_wp_20240603.csv.gz")
-cor(gpt4t$gpt4turbo_wp_Saved, gpt4t$Saved)
+gpt4t = read_csv(get_filepath("4_gpt4turbo_wp_20241118.csv.gz"))
+gpt4o = read_csv(get_filepath("4_gpt4o_wp_20240603.csv.gz"))
+gpt35 = read_csv(get_filepath("4_gpt35turbo0125_wp_20240603.csv.gz"))
   
 
 
@@ -69,9 +68,7 @@ kable(
   ) %>% 
   collapse_rows(columns = 1) %>% 
   kable_styling(latex_options = "hold_position") %>% 
-  writeLines(con="Figures/6_CorrelationTable.tex")
-
-
+  writeLines(con=paste0(get_filepath("Figures"),"/6_CorrelationTable.tex"))
 
 
 
@@ -81,6 +78,29 @@ kable(
 # Compare AMCE estimate from PPI with WLS in Moral Machine Data
 ###############################################################
 
+# Load association between predicted and observed responses
+rhos = read_csv("Data/7_rho.csv") 
+
+label_rho = function(.label, .ppi_corr){
+  
+  # Format ppi correlation 
+  ppi_corr = .ppi_corr %>% 
+    round(2) %>% 
+    as.character() %>% 
+    sub("^0\\.", ".", .) %>% 
+    ifelse(nchar(.) == 2, paste0(.,"0"), .)
+
+  # Combine label and ppi corr with math symbol
+  combined = bquote(.(.label)~tilde(rho)==.(ppi_corr))
+  
+  return(combined)
+}
+
+# Example use 
+label_rho("Variable", 0.5)
+
+
+# Create legend for figure
 colors = tribble(
   ~Variable,       ~Code,        ~Label,
   "Species",       "#FFBC79FF",  "Sparing humans vs animals",
@@ -92,11 +112,17 @@ colors = tribble(
   "Barrier",       "#C8D0D9FF",  "Sparing pedestrians vs passengers",
   "Intervention",  "#C85200FF",  "Preference for inaction vs intervention",
   "Social Status", "#7B848FFF",  "Sparing high status vs low status"
-)
+  ) %>% 
+  left_join(rhos,  by = c("Variable" = "x")) %>% 
+  mutate(
+    # Combine variable labels with ppi_corr
+    Label = purrr::map2(.x = Label, .y = ppi_corr, .f = label_rho),
+    # Order factor by ppi_corr
+    Variable = fct_reorder(Variable, ppi_corr)
+  )
 
-
-# Load association between predicted and observed responses
-rhos = read_csv("Data/7_rho.csv") 
+colors$Label
+  
 
 # Load PPI estimates
 dd = read_csv("Data/7_ResultsPPI.csv.gz") %>% 
@@ -136,40 +162,8 @@ dc = dd %>%
   mutate(method = method %>% str_extract("ppi|sil|hum")) 
   
 
+# Parameters for plotting
 brewer_palette = "Set2"
-
-format_digit = function(.number){
-  .number %>% 
-    round(2) %>% 
-    as.character() %>% 
-    sub("^0\\.", ".", .) %>% 
-    ifelse(nchar(.) == 2, paste0(.,"  "), .)
-}
-
-r = dp %>% 
-  group_by(x,y) %>% 
-  slice(which.max(N)) %>% 
-  mutate(ppi_corr = format_digit(ppi_corr))
-
-add_labs = function(.plot, .var, .ynudge=0){
-  
-  
-  lab = deparse(bquote(" "*tilde(rho)==.(filter(r,x==.var)$ppi_corr)))
-  
-  y = r %>% 
-    filter(x==.var) %>% 
-    pull(ratio) %>%  
-    {{.*100}}
-  
-  annotated = .plot + 
-    annotate("text",label=lab,y=y+.ynudge, size=asize, 
-             parse=T, x=xnudge,family = "serif") 
-  
-  return(annotated)
-}
-
-
-  
 asize = 3.65
 xnudge = 10^6/10^4 + .383
 
@@ -211,11 +205,9 @@ pb_ppi = db %>%
     panel.grid.major = element_line(linewidth = 0.2),  
     panel.grid.minor = element_line(linewidth = 0.1),
     plot.margin = margin(t=4, r=8, b=2, l=4, "pt"),
-    legend.position = "none"
+    legend.position = "bottom"
   )
 pb_ppi
-
-
 
 # Bias silicon sampling
 pb_sil = db %>% 
@@ -243,8 +235,7 @@ pb_sil = db %>%
   ) +
   scale_color_manual(
     breaks = colors$Variable, 
-    values = colors$Code, 
-    labels = colors$Label
+    values = colors$Code
   ) +
   theme(
     panel.grid.major = element_line(linewidth = 0.2),  
@@ -276,8 +267,7 @@ pp_ppi = dp %>%
   ) +
   labs(
     x = "Number of predictions for every human subject N/n",
-    y = "PPI CI width as percentage of classical CI",
-    color=""
+    y = "PPI CI width as percentage of classical CI"
   ) +
   scale_color_manual(
     breaks = colors$Variable, 
@@ -290,17 +280,6 @@ pp_ppi = dp %>%
     plot.margin = margin(t=4, r=8, b=2, l=4, "pt")
   ) 
   
-
-
-pp_ppi = pp_ppi %>% 
-  add_labs("Species") %>% 
-  add_labs("Utilitarian",.ynudge = 0.0005) %>%  
-  add_labs("Age",.ynudge = -0.0005) %>% 
-  add_labs("Gender", .ynudge = 0.00085) %>% 
-  add_labs("CrossingSignal", .ynudge = -0.0012) %>% 
-  add_labs("Fitness", .ynudge = 0.001) %>% 
-  add_labs("Barrier",.ynudge = -0.0006) %>% 
-  add_labs("Intervention")  
 
 pp_ppi
 
@@ -413,8 +392,6 @@ pc_sil = dc %>%
 pc_sil
 
 
-
-
 # Create titles for combined plot
 titles = paste0(paste0(rep(" ", 12),collapse = ""), "Mixed subjects",
                 paste0(rep(" ", 79),collapse = ""), "Silicon subjects")
@@ -446,14 +423,12 @@ ggsave(filename = paste0("Figures/8_SimulationResults.pdf"),
 
 
 
-
-
 ###############################################################
 # Analysis of prediction error 
 ###############################################################
 
 
-scipen(99999)
+
 scale2 = function(.var){
   # scale by 2 standard deviations 
   # then the regression coefficient regression represents the change in the DV by 2 SDs
@@ -462,8 +437,9 @@ scale2 = function(.var){
 
 sd(df$Review_political)
 # Load data
-df = read_csv("Data/5_SurveySampleLLM.csv.gz") %>% 
-  filter(!is.na(gpt4turbo_wp_Saved_1)) %>% 
+df = read_csv("Data/4_gpt4turbo_wp_20241118.csv.gz")
+
+filter(!is.na(gpt4turbo_wp_Saved_1)) %>% 
   mutate(error = abs(gpt4turbo_wp_Saved_1-Saved),
          UserID = factor(UserID), 
          Review_educationBracket = Review_educationBracket %>% factor() %>% relevel(ref = "Some college"), 
@@ -517,103 +493,21 @@ summary(m)
 # These associations of errors with demographics are rather small, e.g. 3pp for Less than high school. 
 # The continuous variables were rescaled by 2 standard deviations to make them comparable to dummy variables (Gelman trick). 
 
-
-
-##############################################
-# Calculate AMCE for human and LLM predictions
-##############################################
-
+profiles = gpt4t
+# Define dependent variable
+profiles$dv = profiles[["Saved"]]
 
 
 
-# Define function to calculate AMCE
-calculate_amce = function(profiles, depvar){
-  # Code adopted from https://osf.io/d7un2
-  
-  # Calculate AMCE and standard error like for Figure 2a in Awad et al. (2018)
-  amce = profiles %>% 
-    GetMainEffectSizesCustom(savedata=F, r=9, depvar=depvar) %>% 
-    GetPlotData(isMainFig=T, r=9) %>% 
-    mutate(conf.low  = amce - qnorm(0.975) * se, 
-           conf.high = amce + qnorm(0.975) * se,
-           dv = depvar) %>% 
-    select(label, dv, amce, se, conf.low, conf.high)
-  
-  return(amce)
-}
 
 
-# AMCE for human subjects
-main.Saved = calculate_amce(mms,"Saved")
-
-# AMCE for GPT4 Turbo
-main.gpt4turbo_wp_Saved = calculate_amce(mms,"gpt4turbo_wp_Saved_1")
-
-# # AMCE for GPT 4o
-# main.gpt4o_wp_Saved = calculate_amce(mms,"gpt4o_wp_Saved_1") 
-# 
-# # AMCE for GPT3.5 Turbo
-# main.gpt35turbo0125_wp_Saved = calculate_amce(mms,"gpt35turbo0125_wp_Saved_1") 
-
-# AMCEs reported by Awad et al (2018) based responses from US and other countries 
-main.Awad2018 = tribble(
-  ~amce, ~label,
-  0.061, "Intervention",
-  0.097, "Barrier",
-  0.353, "CrossingSignal",
-  0.119, "Gender",
-  0.160, "Fitness",
-  0.345, "Social Status",
-  0.497, "Age",
-  0.651, "Utilitarian",
-  0.585, "Species") %>% 
-  mutate(dv="Awad2018")
-
-# Create labels for plot
-cols = tribble(
-  ~dv,                       ~Color,    ~Label, 
-  "gpt4turbo_wp_Saved_1",      "#4477AA", "Silicon Sampling\n(GPT-4 Turbo) ",
-  "Saved",                   "#DDCC77", " \nMoral Machine\nSample\n ",
-  "Awad2018",                "#CC6677", " \nAwad et al.\n(2018)\n "
-) %>%  
-  mutate(dv = factor(dv,ordered = T))
 
 
-# Create dataframe storing all AMCEs
-amces = main.Saved %>% 
-  bind_rows(main.Awad2018) %>% 
-  bind_rows(main.gpt4turbo_wp_Saved) %>% 
-  mutate(
-    dv = factor(dv,levels=cols$dv), 
-    label = factor(label,levels=colors$Variable[nrow(colors):1], labels=colors$Label[nrow(colors):1])
-  )
 
 
-# Create bar plot with AMCEs and 95% CIs
-ggplot(amces, aes(x=amce, y=label, xmin=conf.low, xmax=conf.high, fill=dv)) + 
-  geom_col(position=position_dodge(width=0.8)) +
-  geom_errorbar(
-    position=position_dodge(width=0.8),
-    width=.2, 
-    color="darkgrey"
-  ) +
-  scale_fill_manual(
-    breaks=cols$dv,
-    values=cols$Color, 
-    labels=cols$Label
-  ) + 
-  labs(
-    fill = "Dataset",
-    x="AMCE with 95% confidence intervals", 
-    y="Attribute of Scenario"
-  ) +
-  theme(
-    axis.text.y = element_text(size = 9),
-    axis.title.x = element_text(size = 11),
-    axis.title.y = element_text(size = 11),
-    legend.text = element_text(size = 9))
 
-ggsave(filename="Figures/8_AMCEs.pdf",width=7,height=5)
+
+
 
 
 
