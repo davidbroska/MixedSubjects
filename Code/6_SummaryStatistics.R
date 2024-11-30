@@ -130,7 +130,7 @@ colors$Variable = factor(colors$Variable, levels = fct_levels)
   
 
 # Load Variable# Load PPI estimates
-dd = read_csv("Data/7_ResultsPPI.csv.gz") %>% 
+dd = read_csv("Data/7_ResultsPPI_coord1.csv.gz") %>% 
   mutate(
     ratio_ppi_hum_se = se_ppi / se_hum,
     ratio_sil_hum_se = se_sil / se_hum,
@@ -262,16 +262,15 @@ pb_sil
 # Precision of PPI 
 pp_ppi = dp %>% 
   filter(method == "ppi") %>% 
-  ggplot(aes(N, ratio, color = x)) + 
+  ggplot(aes(N, 100*ratio, color = x)) + 
   geom_line() +
   scale_x_continuous(
     labels = label_comma()
   ) +
   scale_y_continuous(
-    labels = scales::percent_format(accuracy = 1, scale = 100),
-    breaks = seq(0,1,0.02), 
-    limits = c(NA,1),
+    labels = scales::percent_format(accuracy = 1, scale = 1),
   ) +
+  coord_cartesian(ylim = c(NA, 100)) + 
   guides(
     color = "none"
   ) +
