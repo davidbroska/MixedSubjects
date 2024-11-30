@@ -91,7 +91,7 @@ label_rho = function(.label, .ppi_corr){
     ifelse(nchar(.) == 2, paste0(.,"0"), .)
 
   # Combine label and ppi corr with math symbol
-  combined = bquote(.(.label)~tilde(rho)==.(ppi_corr))
+  combined = bquote(.(.label)~"("*tilde(rho)==.(ppi_corr)*")")
   
   return(combined)
 }
@@ -185,7 +185,7 @@ pb_ppi = db %>%
     linewidth = 0.4
   ) +
   labs(
-    x = "Number of predictions for human subject N/n",
+    x = "Number of silicon subjects N",
     y = "Bias", 
     color = "Scenario\nAttribute"
   ) +
@@ -194,6 +194,9 @@ pb_ppi = db %>%
   ) +
   scale_x_continuous(
     labels = label_comma()
+  ) +
+  scale_y_continuous(
+    limits = c(min(db$bias), max(db$bias))
   ) +
   scale_color_manual(
     breaks = colors$Variable, 
@@ -227,11 +230,14 @@ pb_sil = db %>%
   scale_x_continuous(
     labels = label_comma()
   ) +
+  scale_y_continuous(
+    limits = c(min(db$bias), max(db$bias)),
+  ) +
   labs(
     linetype = "Language Model", 
     y = "Bias",
     color = "", 
-    x = "Number of predictions for every human subject N/n"
+    x = "Number of silicon subjects N"
   ) +
   scale_color_manual(
     breaks = colors$Variable, 
@@ -260,14 +266,14 @@ pp_ppi = dp %>%
   scale_y_continuous(
     labels = scales::percent_format(accuracy = 1, scale = 100),
     breaks = seq(0,1,0.02), 
-    limits = c(0.9,1),
+    limits = c(NA,1),
   ) +
   guides(
     color = "none"
   ) +
   labs(
-    x = "Number of predictions for every human subject N/n",
-    y = "PPI CI width as percentage of classical CI"
+    x = "Number of silicon subjects N",
+    y = "CI width as percentage of classical CI"
   ) +
   scale_color_manual(
     breaks = colors$Variable, 
@@ -290,8 +296,8 @@ pp_sil = dp %>%
   ggplot(aes(N, 100*ratio, color = x)) + 
   geom_line() +
   labs(
-    x = "Number of predictions for every human subject N/n",
-    y = "PPI CI width as percentage of classical CI",
+    x = "Number of silicon subjects N",
+    y = "CI width as percentage of classical CI",
   ) +
   guides(
     color = "none"
@@ -301,7 +307,7 @@ pp_sil = dp %>%
   ) +
   scale_y_continuous(
     labels = scales::percent_format(accuracy = 1, scale = 1),
-    breaks = c(0,20,40,60,80,100),
+    breaks = seq(0,200,10),
     limits = c(0,100),
   ) +
   scale_color_manual(
@@ -329,8 +335,8 @@ pc_ppi = dc %>%
   ) +
   geom_line() +
   labs(
-    x = "Number of predictions for every human subject N/n", 
-    y="% of CIs that cover parameter"
+    x = "Number of silicon subjects N", 
+    y="Percentage of CIs that cover parameter"
   ) +
   guides(
     color = "none"
@@ -373,8 +379,8 @@ pc_sil = dc %>%
     limits = c(0,100)
   ) + 
   labs(
-    x = "Number of predictions for every human subject N/n", 
-    y = "% of CIs that cover parameter") +
+    x = "Number of silicon subjects N", 
+    y = "Percentage of CIs that cover parameter") +
   guides(
     color = "none"
   ) +
