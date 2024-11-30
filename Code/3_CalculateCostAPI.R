@@ -283,19 +283,17 @@ pcost = function(.rho, .cf, .cY, .verbose=F){
 c1_gpt4t = cost(nprompt=1, ntok_in=ntok_in, ntok_out=ntok_out, 
                 price1k_in = 0.01, price1k_out = 0.03)
 
-c1_gpt4t
+c1_gpt4t = 0.05
 
 # Cost of a 1 minute survey response with California minimum wage $16.00/hour 
-c1_human = 16/60 * 1
+c1_human = 7.25/12
 c1_human
 
-
-
 # Cost of mixed subjects experiment as a percentage of human subjects experiment
-psaving07 = pcost(.rho=0.7, .cf=c1_gpt4t, .cY=c1_human, .verbose = T)
+psaving07 = pcost(.rho=0.6, .cf=c1_gpt4t, .cY=c1_human, .verbose = T)
 round(100*psaving07,1)
 
-psaving09 = pcost(.rho=0.9, .cf=c1_gpt4t, .cY=c1_human, .verbose = T)
+psaving09 = pcost(.rho=0.8, .cf=c1_gpt4t, .cY=c1_human, .verbose = T)
 round(100*psaving09,1)
 
 
