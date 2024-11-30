@@ -722,9 +722,9 @@ def _power_analysis_stats(grads, grads_hat, inv_hessian):
     cov = inv_hessian @ (grads_[:,None,:] * grads_hat_[:,:,None]).mean(axis=0) @ inv_hessian
     var = inv_hessian @ (grads_[:,None,:]*grads_[:,:,None]).mean(axis=0) @ inv_hessian
     var_hat = inv_hessian @ (grads_hat_[:,None,:]*grads_hat_[:,:,None]).mean(axis=0) @ inv_hessian
-    rhos = np.diag(cov)/((np.diag(var)*np.diag(var_hat)))**0.5
+    rhos_sq = np.diag(cov)**2/(np.diag(var)*np.diag(var_hat))
     sigmas_sq = np.diag(var)
-    return rhos, sigmas_sq
+    return rhos_sq, sigmas_sq
 
 def _estimate_ppi_SE(n, N, rho_sq, var_Y):
     if N == np.inf:
@@ -1292,7 +1292,8 @@ def compute_amce_ppi(n_data, N_data, x, y, alpha=0.05):
     # calculate point estimate
     beta_ppi = ppi_ols_pointestimate(X=n_X, Y=n_Y_human, Yhat=n_Y_silicon, 
                                      X_unlabeled=N_X, Yhat_unlabeled=N_Y_silicon, 
-                                     w=n_weights, w_unlabeled=N_weights)
+                                     w=n_weights, w_unlabeled=N_weights,
+                                     coord=1)
     
     # using ppi function to calculate point estimates (lambda=0)
     beta_hum = ppi_ols_pointestimate(X=n_X, Y=n_Y_human, Yhat=n_Y_silicon, 
@@ -1312,7 +1313,8 @@ def compute_amce_ppi(n_data, N_data, x, y, alpha=0.05):
     # calculate confidence intervals for PPI, human subjects, and silicon subjects
     lower_CI_ppi, upper_CI_ppi = ppi_ols_ci(X=n_X, Y=n_Y_human, Yhat=n_Y_silicon, 
                                             X_unlabeled=N_X, Yhat_unlabeled=N_Y_silicon, 
-                                            w=n_weights, w_unlabeled=N_weights, alpha=alpha)
+                                            w=n_weights, w_unlabeled=N_weights, alpha=alpha,
+                                            coord=1)
     
     lower_CI_hum, upper_CI_hum = classical_ols_ci(X=n_X, Y=n_Y_human, w=n_weights, alpha=alpha)
 
@@ -1333,7 +1335,7 @@ def compute_amce_ppi(n_data, N_data, x, y, alpha=0.05):
     # calculate rho
     beta = sm.WLS(n_Y_human, n_X, weights=n_weights).fit().params
 
-    grads, grads_hat, _, inv_hessian = _ols_get_stats(
+    grads, grads_hat, grads_hat_unlabeled, inv_hessian = _ols_get_stats(
         pointest=beta, 
         X=n_X,
         Y=n_Y_human,
@@ -1344,7 +1346,7 @@ def compute_amce_ppi(n_data, N_data, x, y, alpha=0.05):
         w_unlabeled=N_weights,
         use_unlabeled=False)
     
-    rho, _ = _power_analysis_stats(grads, grads_hat, inv_hessian)
+    rho_sq, var_y = _power_analysis_stats(grads, grads_hat, inv_hessian)
 
     # create and return the output DataFrame
     output_df = pd.DataFrame({
@@ -1364,7 +1366,7 @@ def compute_amce_ppi(n_data, N_data, x, y, alpha=0.05):
         "upper_hum": upper_CI_hum[1],         # The upper bound of the human subjects confidence interval
         "lower_sil": lower_CI_sil[1],         # The lower bound of the silicon subjects confidence interval
         "upper_sil": upper_CI_sil[1],         # The upper bound of the silicon subjects confidence interval
-        "ppi_corr": rho[1]},                  # The association between predictions and outcomes
+        "ppi_corr": np.sqrt(rho_sq[1])},      # The association between predictions and outcomes
         index=[0])
     
     return output_df 

@@ -20,24 +20,16 @@ colors = tribble(
 # Calculate AMCE for human and LLM predictions
 ##############################################
 
-# Load data with responses from human subjects and predicted responses
-mms = get_filepath("2_SurveySample.csv.gz") %>% 
-  fread() %>% 
-  PreprocessProfiles()
+
 
 gpt4t = get_filepath("4_gpt4turbo_wp_20241118.csv.gz") %>% 
   fread() %>% 
   PreprocessProfiles()
 
 
-nrow(mms)==nrow(gpt4t)
-
-all(mms$ResponseID %in% gpt4t$ResponseID)
-all(gpt4t$ResponseID %in% mms$ResponseID)
 
 
 # Count NAs on dependent variables
-summarise(mms,across(all_of("Saved"), ~ sum(is.na(.))))
 summarise(gpt4t,across(all_of(c("Saved","gpt4turbo_wp_Saved")), ~ sum(is.na(.))))
 
 
@@ -59,7 +51,7 @@ calculate_amce = function(profiles, depvar){
 
 
 # AMCE for human subjects
-main.Saved = calculate_amce(mms,"Saved")
+main.Saved = calculate_amce(gpt4t,"Saved")
 
 # Output referenced in Python script
 mutate(main.Saved, across(where(is.numeric), ~ round(.,3))) %>% kable()
