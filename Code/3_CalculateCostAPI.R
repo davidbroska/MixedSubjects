@@ -285,18 +285,28 @@ c1_gpt4t = cost(nprompt=1, ntok_in=ntok_in, ntok_out=ntok_out,
 
 c1_gpt4t = 0.05
 
-# Cost of a 1 minute survey response with California minimum wage $16.00/hour 
+# Cost of a 5 minute survey response with Federal minimum wage $7.25/hour 
 c1_human = 7.25/12
 c1_human
 
 # Cost of mixed subjects experiment as a percentage of human subjects experiment
-psaving07 = pcost(.rho=0.6, .cf=c1_gpt4t, .cY=c1_human, .verbose = T)
+psaving06 = pcost(.rho=0.6, .cf=c1_gpt4t, .cY=c1_human, .verbose = T)
 round(100*psaving07,1)
 
-psaving09 = pcost(.rho=0.8, .cf=c1_gpt4t, .cY=c1_human, .verbose = T)
+psaving08 = pcost(.rho=0.8, .cf=c1_gpt4t, .cY=c1_human, .verbose = T)
 round(100*psaving09,1)
 
+required_gamma = function(rho, c){
+  return((rho^2 + c*rho^2 - rho^4 - 2*(c*rho^4 - c*rho^6)^0.5)/rho^4)
+}
 
+gamma06 = required_gamma(0.6, psaving09)
+c2_gpt4t = gamma06*c1_human
+print(c2_gpt4t)
+
+psaving06_2 = pcost(.rho = 0.6, .cf=c2_gpt4t, .cY=c1_human, .verbose = T)
+
+print(round(c1_gpt4t/c2_gpt4t, 2))
 
 ###############################################################################
 # PPI experiments are cheaper for cheaper algorithms and higher PPI correlation
