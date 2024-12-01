@@ -291,18 +291,26 @@ c1_human
 
 # Cost of mixed subjects experiment as a percentage of human subjects experiment
 psaving06 = pcost(.rho=0.6, .cf=c1_gpt4t, .cY=c1_human, .verbose = T)
-round(100*psaving07,1)
+round(100*psaving06,1)
 
 psaving08 = pcost(.rho=0.8, .cf=c1_gpt4t, .cY=c1_human, .verbose = T)
-round(100*psaving09,1)
+round(100*psaving08,1)
 
-required_gamma = function(rho, c){
-  return((rho^2 + c*rho^2 - rho^4 - 2*(c*rho^4 - c*rho^6)^0.5)/rho^4)
+# How cheap LLMs need to be for percent cost saving and rho
+required_gamma = function(rho, psaving){
+  
+  c = psaving
+  
+  gamma = (rho^2 + c*rho^2 - rho^4 - 2*(c*rho^4 - c*rho^6)^0.5)/rho^4
+  
+  return(gamma)
 }
 
-gamma06 = required_gamma(0.6, psaving09)
+# Calculate required gamma
+gamma06 = required_gamma(0.6, psaving08)
 c2_gpt4t = gamma06*c1_human
-print(c2_gpt4t)
+
+c2_gpt4t
 
 psaving06_2 = pcost(.rho = 0.6, .cf=c2_gpt4t, .cY=c1_human, .verbose = T)
 
