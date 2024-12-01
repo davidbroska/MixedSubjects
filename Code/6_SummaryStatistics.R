@@ -141,6 +141,7 @@ glimpse(dd)
 # Check for NA values
 summarise(dd, across(everything(), ~ sum(is.na(.))))
 
+
 # bias
 db = dd %>% 
   pivot_longer(
@@ -176,6 +177,20 @@ xnudge = 10^6/10^4 + .383
 #########################################
 # Bias plots for PPI and silicon sampling
 #########################################
+
+# Maximum bias in silicon sampling
+max_bias = db %>% 
+  filter(method=="sil") %>% 
+  slice(which.max(abs(bias)))
+
+# Maximum bias as a percentage of the range of the scale of the dependent variable
+round(100 * max_bias$bias/(1-0), 1)
+
+# Ground truth AMCE
+round(abs(max_bias$param), 2)
+
+# Maximum bias as a percentage of the ground truth AMCE
+round(100*abs(max_bias$bias)/abs(max_bias$param),0)
 
 # Bias PPI 
 pb_ppi = db %>% 

@@ -141,11 +141,40 @@ rhos = read_csv("Data/7_rho.csv", col_select = c("x","y","ppi_corr"))
 dfsim = read_csv("Data/7_ResultsPPI.csv.gz") %>% 
   mutate(
     ratio_ppi_hum_se = se_ppi / se_hum,
+    ratio_ppi_hum_se_theory = sqrt(1-ppi_corr^2 * N/(n+N)), 
     ratio_sil_hum_se = se_sil / se_hum,
-    )
+    n0_ppi = n*(1/ratio_ppi_hum_se)^2,
+    n0_theory = n*(n+N)/(n+N*(1-ppi_corr^2))
+)
+
+# furhter summary of increase in precision
+dfsim %>% 
+  filter(N == max(dfsim$N)) %>% 
+  select(x,  ppi_corr, n0_ppi) %>% 
+  arrange(desc(ppi_corr))
+
+dfsim %>% 
+  filter(N == max(dfsim$N)) %>% 
+  ggplot(aes(beta_hum, beta_sil)) + 
+  geom_point() +
+  geom_abline(intercept = 0, slope = 1) +
+  scale_x_continuous(limits = c(0,1)) +
+  scale_y_continuous(limits = c(0,1))
+
+dfsim %>% 
+  filter(N == max(dfsim$N)) %>% 
+  ggplot(aes(beta_hum, beta_ppi)) + 
+  geom_point() +
+  geom_abline(intercept = 0, slope = 1) +
+  scale_x_continuous(limits = c(0,1)) +
+  scale_y_continuous(limits = c(0,1))
+
 
 # Check for NA values
 summarise(dfsim, across(everything(), ~ sum(is.na(.))))
+
+
+
 
 
 plot_results_ratio = function(.predictors, .n, .Nmax, .model, .rhos){
