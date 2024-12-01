@@ -122,7 +122,7 @@ p_se = ggplot(se_plotdata, aes(x = k, y = p_of_classic_se, color = factor(rho), 
   ) +
   labs(
     x = "Number of silicon subjects for every human subject N/n",
-    y = "PPI SE as percentage of human subjects SE"
+    y = "PPI standard error as percentage of human subjects standard error     "
   ) +
   guides(
     color = guide_legend(title = bquote("PPI correlation "~tilde(rho))), 

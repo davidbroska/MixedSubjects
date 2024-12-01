@@ -83,14 +83,14 @@ rhos = read_csv("Data/7_rho.csv")
 
 label_rho = function(.label, .ppi_corr){
   
-  # Format ppi correlation 
+  # Format PPI correlation 
   ppi_corr = .ppi_corr %>% 
     round(3) %>% 
     as.character() %>% 
     sub("^0\\.", ".", .) %>% 
     ifelse(nchar(.) == 3, paste0(.,"0"), .)
 
-  # Combine label and ppi corr with math symbol
+  # Combine label and PPI correlation with math symbol
   combined = bquote(.(.label)~"("*tilde(rho)==.(ppi_corr)*")")
   
   return(combined)
