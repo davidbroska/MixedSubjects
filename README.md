@@ -4,5 +4,15 @@ This GitHub repository provides the replication code and data for the journal ar
 
 **Keywords:** Mixed Subjects Design, Prediction-Powered Inference, PPI Correlation, Experiments, Power Analysis, Machine Learning, Large Language Models, Synthetic Data, Moral Machine Experiment, Computational Social Science
 
+
+<br>
 Broska, David, Michael Howes, and Austin van Loon. 2024. “The Mixed Subjects Design: Treating Large Language Models as (Potentially) Informative Observations.” OSF. https://doi.org/10.31235/osf.io/j3bnt.
+
+<br>
+
+<br>
+
+![](Figures/0_Infogram.svg)
+
+
 
