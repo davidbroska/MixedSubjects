@@ -14,7 +14,7 @@ Broska, David, Michael Howes, and Austin van Loon. 2024. “The Mixed Subjects D
 
 <br>
 
-![](Figures/0_Infogram.svg)
+![](Figures/0_Infogram.png)
 
 
 
