@@ -49,6 +49,7 @@ bias_plot_n = dfn_long %>%
   ) +
   scale_color_manual(values = custom_colors) +
   scale_shape_manual(values = custom_shapes) +
+  scale_x_continuous(labels = label_comma()) +
   scale_y_continuous(breaks = seq(0,1,0.05), limits = c(NA, ymax))
 
 
@@ -66,6 +67,7 @@ coverage_plot_n = dfn_long %>%
   ) +
   scale_color_manual(values = custom_colors) +
   scale_shape_manual(values = custom_shapes) +
+  scale_x_continuous(labels = label_comma()) +
   scale_y_continuous(labels = percent_format(accuracy = 1), breaks = seq(0,1,0.2), limits = c(0,1)) 
 
 
@@ -82,6 +84,7 @@ se_plot_n = dfn_long %>%
   ) +
   scale_color_manual(values = custom_colors) +
   scale_shape_manual(values = custom_shapes) +
+  scale_x_continuous(labels = label_comma()) +
   scale_y_continuous(breaks = seq(0,1,0.05), limits = c(0, ymax)) 
 se_plot_n
 
@@ -98,6 +101,7 @@ rmse_plot_n = dfn_long %>%
   ) +
   scale_color_manual(values = custom_colors) +
   scale_shape_manual(values = custom_shapes) +
+  scale_x_continuous(labels = label_comma()) +
   scale_y_continuous(breaks = seq(0,1,0.05), limits = c(0, ymax)) 
 rmse_plot_n
 

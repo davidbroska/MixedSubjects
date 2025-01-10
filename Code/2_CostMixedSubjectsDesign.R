@@ -53,7 +53,7 @@ p_n0 = ggplot(n0_plotdata, aes(x = k, y = n0, color = factor(rho), linetype= fac
     values = c("#c7e9b4","#7fcdbb","#41b6c4","#2c7fb8","#253494")
   ) +
   labs(
-    x = "Number of silicon subjects for human subject N/n",
+    x = "Number of silicon subjects for every human subject N/n",
     y = bquote("Effective sample size"~n[0]~"as percentage of human sample size"~n),
   ) +
   guides(
@@ -306,7 +306,7 @@ p_cost = ggplot(dd, aes(1/gamma, pcost, color = factor(rho), linetype = factor(r
     values = c("#c7e9b4","#7fcdbb","#41b6c4","#2c7fb8","#253494")
   ) +
   labs(
-    x = bquote("Predictions affordable for every gold-standard observation"~1/gamma), 
+    x = bquote("Silicon subjects affordable for the cost of recruiting a human subject"~1/gamma), 
     y = "Cost of mixed subjects as percentage of human subjects experiment   "
   ) +
   theme(
