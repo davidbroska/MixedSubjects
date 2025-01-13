@@ -217,7 +217,7 @@ pcost = function(.rho, .cf, .cY, .verbose=F){
   
   # Check is rho sufficiently large
   minimum_rho = (2*sqrt(gamma)) / (1+gamma)
-  is_sufficient = .rho > minimum_rho
+  is_sufficient = .rho > minimum_rho 
   
   # Print warning if not
   if(any(!is_sufficient)) print("Rho is not sufficiently large for some cases.")
@@ -241,18 +241,18 @@ pcost = function(.rho, .cf, .cY, .verbose=F){
 
 
 # Example cost of an LLM response 
-c1_llm = 0.05
+c1_llm = 0.01
 
 # Cost of a 5 minute survey response with Federal minimum wage $7.25/hour 
-c1_human = 7.25/12
+c1_human = 1
 c1_human
 
 # Cost of mixed subjects experiment as a percentage of human subjects experiment
-psaving06 = pcost(.rho=0.6, .cf=c1_llm, .cY=c1_human, .verbose = T)
-round(100*psaving06,1)
+psaving07 = pcost(.rho=0.7, .cf=c1_llm, .cY=c1_human, .verbose = T)
+round(100*psaving07,1)
 
-psaving08 = pcost(.rho=0.8, .cf=c1_llm, .cY=c1_human, .verbose = T)
-round(100*psaving08,1)
+psaving09 = pcost(.rho=0.9, .cf=c1_llm, .cY=c1_human, .verbose = T)
+round(100*psaving09,1)
 
 # How cheap LLMs need to be given percent cost saving and rho
 required_gamma = function(rho, psaving){
@@ -263,13 +263,6 @@ required_gamma = function(rho, psaving){
   
   return(gamma)
 }
-
-# Calculate required gamma
-gamma06 = required_gamma(0.6, psaving08)
-c2_llm = gamma06*c1_human
-
-psaving06_2 = pcost(.rho = 0.6, .cf=c2_llm, .cY=c1_human, .verbose = T)
-print(round(c1_llm/c2_llm, 2))
 
 
 ###############################################################################
