@@ -229,11 +229,11 @@ pcost = function(.rho, .cf, .cY, .verbose=F){
   pcost_gamma0 = 1 - .rho^2*(1-0) + 2*sqrt(0 * .rho^2 * (1-.rho^2))
   
   if(.verbose){
-    writeLines(paste0("Cost of silicon subject as percentage of the costs for a human subject: ", round(100 * gamma,2), "%"))
-    writeLines(paste0("Silicon subjects responses affordable for human subject response: ", round(1/gamma)))
+    writeLines(paste0("Cost of silicon subject as percentage of the costs for a human subject: ",round(100 * gamma,2), "%"))
+    writeLines(paste0("Silicon subjects responses affordable for human subject response: ",round(1/gamma)))
     writeLines(paste0("Minimum PPI correlation to save cost in a mixed subjects experiment: ", round(minimum_rho,3)))
-    writeLines(paste0("Percentage of cost of a human subjects experiment: ", round(100*pcost,2),"%"))
-    writeLines(paste0("Percentage of cost of a human subjects experiment if silicon subjects incur no cost: ", round(100*pcost_gamma0,2),"%"))
+    writeLines(paste0("Percentage of cost of a human subjects experiment: ",round(100*pcost,2),"%"))
+    writeLines(paste0("Percentage of cost of a human subjects experiment if silicon subjects incur no cost: ",round(100*pcost_gamma0,2),"%"))
   }
   
   return(pcost)
@@ -241,17 +241,16 @@ pcost = function(.rho, .cf, .cY, .verbose=F){
 
 
 # Example cost of an LLM response 
-c1_llm = 0.01
+c_llm = 0.01
 
-# Cost of a 5 minute survey response with Federal minimum wage $7.25/hour 
-c1_human = 1
-c1_human
+# Cost of a survey response
+c_human = 1
 
 # Cost of mixed subjects experiment as a percentage of human subjects experiment
-psaving07 = pcost(.rho=0.7, .cf=c1_llm, .cY=c1_human, .verbose = T)
+psaving07 = pcost(.rho=0.7, .cf=c_llm, .cY=c_human, .verbose = T)
 round(100*psaving07,1)
 
-psaving09 = pcost(.rho=0.9, .cf=c1_llm, .cY=c1_human, .verbose = T)
+psaving09 = pcost(.rho=0.9, .cf=c_llm, .cY=c_human, .verbose = T)
 round(100*psaving09,1)
 
 # How cheap LLMs need to be given percent cost saving and rho
@@ -263,6 +262,14 @@ required_gamma = function(rho, psaving){
   
   return(gamma)
 }
+
+# Calculate required gamma for achieving the same savings by reducing the cost of silicon subjects
+gamma07 = required_gamma(0.7, psaving09)
+c2_llm = gamma07*c_human
+c2_llm
+
+psaving07_2 = pcost(.rho = 0.7, .cf=c2_llm, .cY=c_human, .verbose = T)
+print(round(c_llm/c2_llm, 2))
 
 
 ###############################################################################
