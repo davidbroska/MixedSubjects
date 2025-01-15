@@ -21,6 +21,9 @@ n0 = function(rho, n, k) {
 n0_07 = n0(rho=0.7, n=1000, k=10)
 n0_09 = n0(rho=0.9, n=1000, k=10)
 
+round(n0_07)
+round(n0_09)
+
 # Effective sample size as a percentage of human sample size
 round(100 * n0_07 / 1000)
 round(100 * n0_09 / 1000)
@@ -86,13 +89,12 @@ p_of_classic_se_ratio = function(rho, k) {
   
 }
 
-# Example: Ratio of PPI standard error to human sample standard error
+# Example: Ratio of PPI standard error to human subjects standard error
 se_07 = p_of_classic_se_ratio(rho=0.7, k=10)
 se_09 = p_of_classic_se_ratio(rho=0.9, k=10)
 
-# Effective sample size as a percentage of human sample size
-round(100 * se_07, 2)
-round(100 * se_09, 2)
+round(100 * se_07, 1)
+round(100 * se_09, 1)
 
 # Percentage change
 round(100 * (se_07 - 1) / 1, 2)
@@ -229,11 +231,11 @@ pcost = function(.rho, .cf, .cY, .verbose=F){
   pcost_gamma0 = 1 - .rho^2*(1-0) + 2*sqrt(0 * .rho^2 * (1-.rho^2))
   
   if(.verbose){
-    writeLines(paste0("Cost of silicon subject as percentage of the costs for a human subject: ",round(100 * gamma,2), "%"))
+    writeLines(paste0("Cost of silicon subject as percentage of the costs for a human subject: ",round(100 * gamma,1), "%"))
     writeLines(paste0("Silicon subjects responses affordable for human subject response: ",round(1/gamma)))
     writeLines(paste0("Minimum PPI correlation to save cost in a mixed subjects experiment: ", round(minimum_rho,3)))
-    writeLines(paste0("Percentage of cost of a human subjects experiment: ",round(100*pcost,2),"%"))
-    writeLines(paste0("Percentage of cost of a human subjects experiment if silicon subjects incur no cost: ",round(100*pcost_gamma0,2),"%"))
+    writeLines(paste0("Percentage of cost of a human subjects experiment: ",round(100*pcost,1),"%"))
+    writeLines(paste0("Percentage of cost of a human subjects experiment if silicon subjects incur no cost: ",round(100*pcost_gamma0,1),"%"))
   }
   
   return(pcost)
