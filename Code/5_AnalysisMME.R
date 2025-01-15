@@ -439,6 +439,98 @@ ggsave(filename = paste0("Figures/5_SimulationResults.pdf"),
 
 
 
+#######################
+# Effective sample size
+#######################
+
+# Define function that calculates the effective sample size
+n0 = function(rho, n, k) {
+  # Define k as the ratio k = N/n
+  
+  # Effective sample size
+  n0 = (n * (k+1)) / (k*(1-rho^2)+1) 
+  
+  return(n0)
+
+}
+
+# Compute effective sample size for N=100,000
+n0_mme = dd %>% 
+  filter(N == 10^5, n == 10^4) %>% 
+  mutate(
+    ppi_corr = round(ppi_corr, 3),
+    n0 = n0(ppi_corr,n,N/n) %>% as.integer()
+  ) %>% 
+  arrange(desc(n0)) %>% 
+  select(x, ppi_corr, n0) 
+
+
+
+# Save LaTex table
+n0_caption = paste0(
+  "PPI correlations and effective sample sizes for each attribute in the Moral Machine experiment. ",
+  "These statistics were computed for sample sizes n=10,000 and N=100,000 in our simulation."
+)
+
+n0_mme %>% 
+  kable( 
+    booktabs=F, escape = F,
+    format = "latex",
+    align = c("l","c","c"),
+    label = "n0-mme",
+    col.names = c("Attribute","PPI Correlation","Effective sample size"),
+    caption = n0_caption,
+  ) %>% 
+  collapse_rows(columns = 1) %>% 
+  kable_styling(latex_options = "hold_position") %>% 
+  writeLines(con=paste0(get_filepath("Figures"),"/5_n0MME.tex"))
+
+
+
+################################
+# Scatterplot for MME simulation
+################################
+
+# Define custom colors and line types
+custom_colors = c("Silicon Sampling" = "#1f78b4","Prediction-Powered Inference" = "#33a02c")
+custom_shapes = c("Prediction-Powered Inference" = 16, "Silicon Sampling" = 15)
+
+
+dscatter = dd %>% 
+  filter(N == 10^5) %>% 
+  select(param,beta_ppi, beta_sil) %>% 
+  pivot_longer(
+    cols = c(beta_ppi,beta_sil), 
+    names_to = "estimator", 
+    values_to = "estimate"
+  ) %>%
+  mutate(
+    estimator = case_when(
+      estimator == "beta_ppi" ~ "Prediction-Powered Inference",
+      estimator == "beta_sil" ~ "Silicon Sampling",
+      TRUE ~ estimator
+    )
+  ) 
+
+pscatter = ggplot(dscatter, aes(param,estimate, color=estimator, shape=estimator)) + 
+  geom_abline(intercept = 0, slope = 1) +
+  geom_point(size = 2) + 
+  scale_color_manual(values = custom_colors) +
+  scale_shape_manual(values = custom_shapes) +
+  scale_x_continuous(limits = c(0,1)) +
+  scale_y_continuous(limits = c(0,1)) +
+  labs(
+    x = "AMCE parameter",
+    y = "AMCE estimate",
+    color = "", 
+    shape = ""
+  ) +
+  theme(legend.position = "bottom") +
+  coord_fixed()
+
+# Save scatterplot
+ggsave(pscatter,filename=paste0(get_filepath("Figures"),"/5_ScatterplotAMCE.pdf"),width=5,height=5)
+
 
 
 ################################################################
