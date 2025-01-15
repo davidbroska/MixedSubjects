@@ -241,7 +241,7 @@ pcost = function(.rho, .cf, .cY, .verbose=F){
 
 
 # Example cost of an LLM response 
-c_llm = 0.01
+c_llm = 0.1
 
 # Cost of a survey response
 c_human = 1
