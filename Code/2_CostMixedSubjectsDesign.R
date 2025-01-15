@@ -258,7 +258,7 @@ required_gamma = function(rho, psaving){
   
   p = psaving
   
-  if (1-rho**2 > psaving){
+  if (1-rho^2 > psaving){
     warning("Psaving is too low")
     return(NA)
   }
@@ -271,10 +271,10 @@ required_gamma = function(rho, psaving){
 # Calculate required gamma for achieving the same savings by reducing the cost of silicon subjects
 gamma07 = required_gamma(0.7, psaving09)
 ggc2_llm = gamma07*c_human
-c2_llm
+ggc2_llm
 
-psaving07_2 = pcost(.rho = 0.7, .cf=c2_llm, .cY=c_human, .verbose = T)
-print(round(c_llm/c2_llm, 2))
+psaving07_2 = pcost(.rho = 0.7, .cf=ggc2_llm, .cY=c_human, .verbose = T)
+print(round(c_llm/ggc2_llm, 2))
 
 
 ###############################################################################
