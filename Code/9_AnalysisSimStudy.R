@@ -17,7 +17,7 @@ ymax = 0.18
 ##############################
 
 # Import averaged simulation results
-dfn = read_csv("Data/10_simulation_study_N.csv.gz")
+dfn = read_csv("Data/8_simulation_study_N.csv.gz")
 
 # Transform data to long format and update method labels
 dfn_long = dfn %>%
@@ -128,7 +128,7 @@ combined_plot = bias_plot_n + se_plot_n + rmse_plot_n + coverage_plot_n +
 combined_plot
 
 # Save to pdf
-ggsave(filename = paste0("Figures/8_SimulationStudy.pdf"), 
+ggsave(filename = paste0("Figures/9_SimulationStudy.pdf"), 
        plot=combined_plot, width=7, height=6)
 
 

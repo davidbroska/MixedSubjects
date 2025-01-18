@@ -2,9 +2,9 @@
 source("Code/RFunctions.R")
 
 # Load data
-gpt4t = read_csv(get_filepath("4_gpt4turbo_wp_20241118.csv.gz"))
-gpt4o = read_csv(get_filepath("4_gpt4o_wp_20240603.csv.gz"))
-gpt35 = read_csv(get_filepath("4_gpt35turbo0125_wp_20240603.csv.gz"))
+gpt4t = read_csv(get_filepath("3_gpt4turbo_wp_20241118.csv.gz"))
+gpt4o = read_csv(get_filepath("3_gpt4o_wp_20240603.csv.gz"))
+gpt35 = read_csv(get_filepath("3_gpt35turbo0125_wp_20240603.csv.gz"))
 
 
 
@@ -68,15 +68,15 @@ kable(
   ) %>% 
   collapse_rows(columns = 1) %>% 
   kable_styling(latex_options = "hold_position") %>% 
-  writeLines(con=paste0(get_filepath("Figures"),"/5_CorrelationTable.tex"))
+  writeLines(con=paste0(get_filepath("Figures"),"/6_CorrelationTable.tex"))
 
 
 ###############################################################
-# Compare AMCE estimate from PPI with WLS in Moral Machine Data
+# Compare AMCE estimate from PPI with WLS in Moral Machine data
 ###############################################################
 
 # Load association between predicted and observed responses
-rhos = read_csv("Data/7_rho.csv") 
+rhos = read_csv("Data/5_rho.csv") 
 
 label_rho = function(.label, .ppi_corr){
   
@@ -127,7 +127,7 @@ colors$Variable = factor(colors$Variable, levels = fct_levels)
   
 
 # Load Variable# Load PPI estimates
-dd = read_csv("Data/7_ResultsPPI_coord1.csv.gz") %>% 
+dd = read_csv("Data/5_ResultsPPI_coord1.csv.gz") %>% 
   mutate(
     ratio_ppi_hum_se = se_ppi / se_hum,
     ratio_sil_hum_se = se_sil / se_hum,
@@ -433,7 +433,7 @@ p = (pb_ppi+pb_sil) / (pp_ppi+pp_sil) / (pc_ppi+pc_sil) +
   )
 
 print(p)
-ggsave(filename = paste0("Figures/5_SimulationResults.pdf"), 
+ggsave(filename = paste0("Figures/6_SimulationResults.pdf"), 
        plot=p, width=11, height=11.7)
 
 
@@ -483,7 +483,7 @@ n0_mme %>%
   ) %>% 
   collapse_rows(columns = 1) %>% 
   kable_styling(latex_options = "hold_position") %>% 
-  writeLines(con=paste0(get_filepath("Figures"),"/5_n0MME.tex"))
+  writeLines(con=paste0(get_filepath("Figures"),"/6_n0MME.tex"))
 
 
 
@@ -689,7 +689,7 @@ DemPlot = FreqLong %>%
 DemPlot
 
 # Save plot
-ggsave(DemPlot,filename=paste0(get_filepath("Figures"),"/5_DemographicDistribution.pdf"),width=9,height=6)
+ggsave(DemPlot,filename=paste0(get_filepath("Figures"),"/6_DemographicDistribution.pdf"),width=9,height=6)
 
 
 

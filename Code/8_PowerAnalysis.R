@@ -184,7 +184,7 @@ cp = cp +
 
 p = ggpubr::ggarrange(cp,pp,nrow=2,legend = "right", labels = "auto", hjust=-0.5, vjust=1.5) 
 print(p)
-ggsave(filename = paste0("Figures/6_MostPowerfulAndCheapestPair.pdf"), 
+ggsave(filename = paste0("Figures/8_MostPowerfulAndCheapestPair.pdf"), 
        plot=p, width=7, height=6)
 
 

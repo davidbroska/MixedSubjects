@@ -16,9 +16,9 @@ from ppi_py import ppi_ols_ci, classical_ols_ci, ppi_ols_pointestimate
 from scipy import stats
 
 
-# ======================================================================
-# Function to generate a scenario for the LLM, used in 4_PromptLLM.iypnb
-# ======================================================================
+# ===========================================
+# Function to generate a scenario for the LLM
+# ===========================================
 
 def generate_scenario(response, include_persona=True):
 
@@ -420,9 +420,9 @@ def generate_scenario(response, include_persona=True):
 
 
 
-# ===================================================================================
-# Function to classify LLM responses as saved or not saved, used in 4_PromptLLM.iypnb
-# ===================================================================================
+# ========================================================
+# Function to classify LLM responses as saved or not saved
+# ========================================================
 
 def classify_response(row, column_name):
 
@@ -468,9 +468,9 @@ def classify_response(row, column_name):
 
 
 
-# ===========================================================================================
-# Function to prompt the LLM with scenarios and save the responses, used in 4_PromptLLM.iypnb
-# ===========================================================================================
+# ================================================================
+# Function to prompt the LLM with scenarios and save the responses
+# ================================================================
 
 def prompt_llm(data, model, api_key, csv_path, include_persona=True, verbose=False, sleep=0, temperature=None):
 
@@ -597,9 +597,9 @@ def prompt_llm(data, model, api_key, csv_path, include_persona=True, verbose=Fal
 
 
 
-# ======================================================================================
-# Function to calculate the weights for estimating the AMCE, used in 7_AnalysisPPI.iypnb
-# ======================================================================================
+# =========================================================
+# Function to calculate the weights for estimating the AMCE
+# =========================================================
 
 def CalcTheoreticalInt(r):
     # this function is applied to each row (r)
@@ -641,9 +641,9 @@ def calcWeightsTheoretical(profiles):
 
 
 
-# =================================================================
-# Function to calculate PPI statistics, used in 7_AnalysisPPI.iypnb
-# =================================================================
+# ====================================
+# Function to calculate PPI statistics
+# ====================================
 
 def _ols_get_stats(
     pointest,
@@ -742,9 +742,9 @@ def _estimate_classical_SE(n, var_Y):
 
 
 
-# =========================================================
-# Function to compute the AMCE, used in 7_AnalysisPPI.iypnb
-# =========================================================
+# ============================
+# Function to compute the AMCE
+# ============================
 
 def compute_amce(data, x, y, alpha=0.05):
 
@@ -955,9 +955,9 @@ def compute_amce(data, x, y, alpha=0.05):
 
 
 
-# ==================================================================
-# Function to compute the AMCE with PPI, used in 7_AnalysisPPI.iypnb
-# ==================================================================
+# =====================================
+# Function to compute the AMCE with PPI
+# =====================================
 
 def compute_amce_ppi(n_data, N_data, x, y, alpha=0.05):
 
@@ -1377,7 +1377,7 @@ def loop_attribute(x):
     
     print(f"Scenario attribute: {x}")
 
-    df = pd.read_csv("../Data/4_gpt4turbo_wp_20241118.csv.gz")
+    df = pd.read_csv("../Data/3_gpt4turbo_wp_20241118.csv.gz")
 
     # sample size of human subjects
     ns = [10000]

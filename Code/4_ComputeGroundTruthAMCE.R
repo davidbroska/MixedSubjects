@@ -22,7 +22,7 @@ colors = tribble(
 
 
 
-gpt4t = get_filepath("4_gpt4turbo_wp_20241118.csv.gz") %>% 
+gpt4t = get_filepath("3_gpt4turbo_wp_20241118.csv.gz") %>% 
   fread() %>% 
   PreprocessProfiles()
 
@@ -54,7 +54,7 @@ main.Saved = calculate_amce(gpt4t,"Saved")
 mutate(main.Saved, across(where(is.numeric), ~ round(.,3))) %>% kable()
 
 # Save csv
-write_csv(main.Saved, paste0(get_filepath("Data"),"/3_AmceParamsSimulationR.csv.tar"))
+write_csv(main.Saved, paste0(get_filepath("Data"),"/4_AmceParamsSimulationR.csv.tar"))
 
 
 # AMCE for GPT4 Turbo
@@ -96,7 +96,7 @@ amces = main.Saved %>%
 
 
 # Create bar plot with AMCEs and 95% CIs
-ggplot(amces, aes(x=amce, y=label, xmin=conf.low, xmax=conf.high, fill=dv)) + 
+p_amces = ggplot(amces, aes(x=amce, y=label, xmin=conf.low, xmax=conf.high, fill=dv)) + 
   geom_col(position=position_dodge(width=0.8)) +
   geom_errorbar(
     position=position_dodge(width=0.8),
@@ -120,9 +120,12 @@ ggplot(amces, aes(x=amce, y=label, xmin=conf.low, xmax=conf.high, fill=dv)) +
     axis.text.y = element_text(size = 9),
     axis.title.x = element_text(size = 11),
     axis.title.y = element_text(size = 11),
-    legend.text = element_text(size = 9))
+    legend.text = element_text(size = 9)
+  )
 
-ggsave(filename="Figures/3_AMCEs.pdf",width=7,height=5)
+p_amces 
+
+ggsave(p_amces, filename="Figures/4_AMCEs.pdf",width=7,height=5)
 
 
 
