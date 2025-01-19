@@ -76,7 +76,7 @@ kable(
 ###############################################################
 
 # Load association between predicted and observed responses
-rhos = read_csv("Data/5_rho.csv") 
+rhos = read_csv(get_filepath("5_rho.csv")) 
 
 label_rho = function(.label, .ppi_corr){
   
@@ -126,8 +126,10 @@ fct_levels = colors %>%
 colors$Variable = factor(colors$Variable, levels = fct_levels)
   
 
-# Load Variable# Load PPI estimates
-dd = read_csv("Data/5_ResultsPPI_coord1.csv.gz") %>% 
+# Load PPI estimates
+
+dd = get_filepath("5_ResultsPPI_coord1.csv.gz") %>% 
+  read_csv() %>% 
   mutate(
     ratio_ppi_hum_se = se_ppi / se_hum,
     ratio_sil_hum_se = se_sil / se_hum,
@@ -435,56 +437,6 @@ p = (pb_ppi+pb_sil) / (pp_ppi+pp_sil) / (pc_ppi+pc_sil) +
 print(p)
 ggsave(filename = paste0("Figures/6_SimulationResults.pdf"), 
        plot=p, width=11, height=11.7)
-
-
-
-
-#######################
-# Effective sample size
-#######################
-
-# Define function that calculates the effective sample size
-n0 = function(rho, n, k) {
-  # Define k as the ratio k = N/n
-  
-  # Effective sample size
-  n0 = (n * (k+1)) / (k*(1-rho^2)+1) 
-  
-  return(n0)
-
-}
-
-# Compute effective sample size for N=100,000
-n0_mme = dd %>% 
-  filter(N == 10^5, n == 10^4) %>% 
-  mutate(
-    ppi_corr = round(ppi_corr, 3),
-    n0 = n0(ppi_corr,n,N/n) %>% as.integer()
-  ) %>% 
-  arrange(desc(n0)) %>% 
-  select(x, ppi_corr, n0) 
-
-
-
-# Save LaTex table
-n0_caption = paste0(
-  "PPI correlations and effective sample sizes for each attribute in the Moral Machine experiment. ",
-  "These statistics were computed for sample sizes n=10,000 and N=100,000 in our simulation."
-)
-
-n0_mme %>% 
-  kable( 
-    booktabs=F, escape = F,
-    format = "latex",
-    align = c("l","c","c"),
-    label = "n0-mme",
-    col.names = c("Attribute","PPI Correlation","Effective sample size"),
-    caption = n0_caption,
-  ) %>% 
-  collapse_rows(columns = 1) %>% 
-  kable_styling(latex_options = "hold_position") %>% 
-  writeLines(con=paste0(get_filepath("Figures"),"/6_n0MME.tex"))
-
 
 
 ################################
