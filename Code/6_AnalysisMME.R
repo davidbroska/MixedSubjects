@@ -481,7 +481,7 @@ pscatter = ggplot(dscatter, aes(param,estimate, color=estimator, shape=estimator
   coord_fixed()
 
 # Save scatterplot
-ggsave(pscatter,filename=paste0(get_filepath("Figures"),"/5_ScatterplotAMCE.pdf"),width=5,height=5)
+ggsave(pscatter,filename=paste0(get_filepath("Figures"),"/6_ScatterplotAMCE.pdf"),width=5,height=5)
 
 
 
