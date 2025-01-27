@@ -180,6 +180,9 @@ max_bias = db %>%
 # Maximum bias as a percentage of the range of the scale of the dependent variable
 round(100 * max_bias$bias/(1-0), 1)
 
+# Silicon subjects AMCE
+round(abs(max_bias$beta_sil), 2)
+
 # Ground truth AMCE
 round(abs(max_bias$param), 2)
 
@@ -200,7 +203,7 @@ pb_ppi = db %>%
   ) +
   labs(
     x = "Number of silicon subjects N",
-    y = "Bias", 
+    y = "Bias in parameter estimates", 
     color = "Scenario\nAttribute"
   ) +
   scale_x_continuous(
@@ -249,7 +252,7 @@ pb_sil = db %>%
   ) +
   labs(
     linetype = "Language Model", 
-    y = "Bias",
+    y = "Bias in parameter estimates", 
     x = "Number of silicon subjects N"
   ) +
   scale_color_manual(
@@ -321,7 +324,7 @@ pp_sil = dp %>%
     labels = scales::percent_format(accuracy = 1, scale = 1),
     breaks = seq(0,100,20),
   ) +
-  coord_cartesian(ylim = c(0, 100)) + 
+  coord_cartesian(ylim = c(20, 100)) + 
   scale_color_manual(
     breaks = colors$Variable, 
     values = colors$Code, 
