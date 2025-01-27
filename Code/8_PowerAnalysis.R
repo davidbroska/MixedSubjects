@@ -135,7 +135,7 @@ pp = ggplot() %>%
   add_power_curves(N, n0_power, rho, label=T) +
   annotate("point", x = optimal_pair[2], y = optimal_pair[1], shape = 4, size = 2.1, stroke = 0.65) +
   theme(legend.key.width = unit(0.5, "inches"), 
-        plot.margin = unit(c(0, 0, 0, 0), "inches"))  
+        plot.margin = unit(c(0, 0, 0, 0.05), "inches"))  
 pp
 
 
@@ -162,7 +162,7 @@ cp = ggplot() %>%
   add_power_curves(N, n0_power, rho) +
   annotate("point", x = optimal_pair[2], y = optimal_pair[1], shape = 4, size = 2.1, stroke = 0.65) +
   theme(legend.key.width = unit(0.5, "inches"), 
-        plot.margin = unit(c(0, 0, 0, 0), "inches"))  
+        plot.margin = unit(c(0, 0, 0, 0.05), "inches"))  
 
 cp
 
