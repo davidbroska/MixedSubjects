@@ -107,7 +107,7 @@ colors = tribble(
   "Age",           "#1170AAFF",  "Sparing the young vs old",               "F9",
   "Gender",        "#5FA2CEFF",  "Sparing women vs men",                   "longdash",
   "Fitness",       "#57606CFF",  "Sparing the fit vs the large",           "dotdash",
-  "CrossingSignal","#FC7D0BFF",  "Sparing the lawful vs unlawful",         "dotted",
+  "CrossingSignal","#FC7D0BFF",  "Sparing the lawful vs unlawful",         "2222",
   "Barrier",       "#C8D0D9FF",  "Sparing pedestrians vs passengers",      "twodash",
   "Intervention",  "#C85200FF",  "Preference for inaction vs intervention","dashed") %>% 
   left_join(rhos,  by = c("Variable" = "x")) %>% 
@@ -200,9 +200,7 @@ pb_ppi = db %>%
     color = "darkgrey", 
     linetype = "dotted"
   ) +
-  geom_line(
-    linewidth = 0.4
-  ) +
+  geom_line() +
   labs(
     x = "Number of silicon subjects N",
     y = "Bias in parameter estimates"
@@ -248,9 +246,7 @@ pb_sil = db %>%
     color = "darkgrey", 
     linetype = "dotted"
   ) +
-  geom_line(
-    linewidth = 0.4
-  ) +
+  geom_line() +
   guides(
     color = "none",
     linetype = "none"
