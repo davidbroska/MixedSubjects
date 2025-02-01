@@ -107,9 +107,9 @@ colors = tribble(
   "Age",           "#1170AAFF",  "Sparing the young vs old",               "F9",
   "Gender",        "#5FA2CEFF",  "Sparing women vs men",                   "longdash",
   "Fitness",       "#57606CFF",  "Sparing the fit vs the large",           "dotdash",
-  "CrossingSignal","#FC7D0BFF",  "Sparing the lawful vs unlawful",         "dashed",
+  "CrossingSignal","#FC7D0BFF",  "Sparing the lawful vs unlawful",         "dotted",
   "Barrier",       "#C8D0D9FF",  "Sparing pedestrians vs passengers",      "twodash",
-  "Intervention",  "#C85200FF",  "Preference for inaction vs intervention","dotted") %>% 
+  "Intervention",  "#C85200FF",  "Preference for inaction vs intervention","dashed") %>% 
   left_join(rhos,  by = c("Variable" = "x")) %>% 
   arrange(ppi_corr) %>% 
   mutate(
