@@ -229,7 +229,7 @@ pb_ppi = db %>%
   ) +
   theme(
     legend.key.height = unit(0.25, "cm"), 
-    legend.key.size = unit(2.2,"lines"), 
+    legend.key.size = unit(2.5,"lines"), 
     panel.grid.major = element_line(linewidth = 0.2),  
     panel.grid.minor = element_line(linewidth = 0.1),
     plot.margin = margin(t=4, r=8, b=2, l=2, "pt"),
@@ -478,7 +478,7 @@ p = (pb_ppi+pb_sil) / (pp_ppi+pp_sil) / (pc_ppi+pc_sil) +
     legend.position = "bottom", 
     plot.title = element_text(hjust = .5, vjust = -3, size = 15),
     plot.margin = margin(t=4, r=8, b=2, l=2, "pt"),
-    legend.margin = margin(t=4, r=0, b=2, l=-35, "pt"),
+    legend.margin = margin(t=4, r=0, b=2, l=-37, "pt"),
     plot.tag = element_text(hjust=1, face = "bold")
   )
 
