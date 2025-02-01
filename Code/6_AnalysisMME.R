@@ -100,16 +100,16 @@ label_rho("Variable", 0.5)
 
 # Create legend for figures
 colors = tribble(
-  ~Variable,       ~Code,        ~Label,
-  "Species",       "#FFBC79FF",  "Sparing humans vs animals",
-  "Social Status", "#7B848FFF",  "Sparing high status vs low status",
-  "Utilitarian",   "#A3CCE9FF",  "Sparing more characters vs fewer",
-  "Age",           "#1170AAFF",  "Sparing the young vs old",
-  "Gender",        "#5FA2CEFF",  "Sparing women vs men",
-  "Fitness",       "#57606CFF",  "Sparing the fit vs the large",
-  "CrossingSignal","#FC7D0BFF",  "Sparing the lawful vs unlawful",
-  "Barrier",       "#C8D0D9FF",  "Sparing pedestrians vs passengers",
-  "Intervention",  "#C85200FF",  "Preference for inaction vs intervention") %>% 
+  ~Variable,       ~Code,        ~Label,                                   ~Linetype,
+  "Species",       "#FFBC79FF",  "Sparing humans vs animals",              "solid",
+  "Social Status", "#7B848FFF",  "Sparing high status vs low status",      "F1",
+  "Utilitarian",   "#A3CCE9FF",  "Sparing more characters vs fewer",       "F5",
+  "Age",           "#1170AAFF",  "Sparing the young vs old",               "F9",
+  "Gender",        "#5FA2CEFF",  "Sparing women vs men",                   "longdash",
+  "Fitness",       "#57606CFF",  "Sparing the fit vs the large",           "dotdash",
+  "CrossingSignal","#FC7D0BFF",  "Sparing the lawful vs unlawful",         "dashed",
+  "Barrier",       "#C8D0D9FF",  "Sparing pedestrians vs passengers",      "twodash",
+  "Intervention",  "#C85200FF",  "Preference for inaction vs intervention","dotted") %>% 
   left_join(rhos,  by = c("Variable" = "x")) %>% 
   arrange(ppi_corr) %>% 
   mutate(
@@ -189,10 +189,12 @@ round(abs(max_bias$param), 2)
 # Maximum bias as a percentage of the ground truth AMCE
 round(100*abs(max_bias$bias)/abs(max_bias$param),0)
 
+
+
 # Bias PPI 
 pb_ppi = db %>% 
   filter(method == "ppi") %>% 
-  ggplot(aes(N, bias, color = x)) + 
+  ggplot(aes(N, bias, color = x, linetype = x)) + 
   geom_hline(
     yintercept = 0, 
     color = "darkgrey", 
@@ -203,8 +205,7 @@ pb_ppi = db %>%
   ) +
   labs(
     x = "Number of silicon subjects N",
-    y = "Bias in parameter estimates", 
-    color = "Scenario\nAttribute"
+    y = "Bias in parameter estimates"
   ) +
   scale_x_continuous(
     labels = label_comma()
@@ -213,18 +214,27 @@ pb_ppi = db %>%
     limits = c(min(db$bias), max(db$bias))
   ) +
   scale_color_manual(
+    name = "Scenario\nAttribute",
     breaks = colors$Variable, 
     values = colors$Code, 
     labels = colors$Label
   ) +
+  scale_linetype_manual(
+    name = "Scenario\nAttribute",
+    breaks = colors$Variable, 
+    values = colors$Linetype, 
+    labels = colors$Label
+  ) +
   guides(
-    color = guide_legend(nrow = 3)
+    color = guide_legend(nrow = 3),
+    linetype = guide_legend(nrow = 3),
   ) +
   theme(
     legend.key.height = unit(0.25, "cm"), 
+    legend.key.size = unit(2.2,"lines"), 
     panel.grid.major = element_line(linewidth = 0.2),  
     panel.grid.minor = element_line(linewidth = 0.1),
-    plot.margin = margin(t=4, r=8, b=2, l=4, "pt"),
+    plot.margin = margin(t=4, r=8, b=2, l=2, "pt"),
     legend.position = "bottom"
   )
 pb_ppi
@@ -232,7 +242,7 @@ pb_ppi
 # Bias silicon sampling
 pb_sil = db %>% 
   filter(method == "sil") %>% 
-  ggplot(aes(N, bias, color = x)) + 
+  ggplot(aes(N, bias, color = x, linetype = x)) + 
   geom_hline(
     yintercept = 0, 
     color = "darkgrey", 
@@ -242,7 +252,8 @@ pb_sil = db %>%
     linewidth = 0.4
   ) +
   guides(
-    color = "none"
+    color = "none",
+    linetype = "none"
   ) +
   scale_x_continuous(
     labels = label_comma()
@@ -251,18 +262,25 @@ pb_sil = db %>%
     limits = c(min(db$bias), max(db$bias)),
   ) +
   labs(
-    linetype = "Language Model", 
     y = "Bias in parameter estimates", 
     x = "Number of silicon subjects N"
   ) +
   scale_color_manual(
+    name = "Scenario\nAttribute",
     breaks = colors$Variable, 
-    values = colors$Code
+    values = colors$Code, 
+    labels = colors$Label
+  ) +
+  scale_linetype_manual(
+    name = "Scenario\nAttribute",
+    breaks = colors$Variable, 
+    values = colors$Linetype, 
+    labels = colors$Label
   ) +
   theme(
+    legend.key.height = unit(0.25, "cm"), 
     panel.grid.major = element_line(linewidth = 0.2),  
-    panel.grid.minor = element_line(linewidth = 0.1),
-    plot.margin = margin(t=4, r=8, b=2, l=4, "pt")
+    panel.grid.minor = element_line(linewidth = 0.1)
   ) 
 pb_sil
 
@@ -274,7 +292,7 @@ pb_sil
 # Precision of PPI 
 pp_ppi = dp %>% 
   filter(method == "ppi") %>% 
-  ggplot(aes(N, 100*ratio, color = x)) + 
+  ggplot(aes(N, 100*ratio, color = x, linetype = x)) + 
   geom_line() +
   scale_x_continuous(
     labels = label_comma()
@@ -284,38 +302,45 @@ pp_ppi = dp %>%
   ) +
   coord_cartesian(ylim = c(NA, 100)) + 
   guides(
-    color = "none"
+    color = "none",
+    linetype = "none"
   ) +
   labs(
     x = "Number of silicon subjects N",
     y = "CI width as percentage of classical CI"
   ) +
   scale_color_manual(
+    name = "Scenario\nAttribute",
     breaks = colors$Variable, 
     values = colors$Code, 
     labels = colors$Label
   ) +
+  scale_linetype_manual(
+    name = "Scenario\nAttribute",
+    breaks = colors$Variable, 
+    values = colors$Linetype, 
+    labels = colors$Label
+  ) +
   theme(
+    legend.key.height = unit(0.25, "cm"), 
     panel.grid.major = element_line(linewidth = 0.2),  
-    panel.grid.minor = element_line(linewidth = 0.1),
-    plot.margin = margin(t=4, r=8, b=2, l=4, "pt")
+    panel.grid.minor = element_line(linewidth = 0.1)
   ) 
-  
-
 pp_ppi
 
 
 # Precision of silicon sampling 
 pp_sil = dp %>% 
   filter(method == "sil") %>% 
-  ggplot(aes(N, 100*ratio, color = x)) + 
+  ggplot(aes(N, 100*ratio, color = x, linetype = x)) + 
   geom_line() +
   labs(
     x = "Number of silicon subjects N",
     y = "CI width as percentage of classical CI",
   ) +
   guides(
-    color = "none"
+    color = "none",
+    linetype = "none"
   ) +
   scale_x_continuous(
     labels = label_comma()
@@ -326,14 +351,21 @@ pp_sil = dp %>%
   ) +
   coord_cartesian(ylim = c(20, 100)) + 
   scale_color_manual(
+    name = "Scenario\nAttribute",
     breaks = colors$Variable, 
     values = colors$Code, 
     labels = colors$Label
   ) +
+  scale_linetype_manual(
+    name = "Scenario\nAttribute",
+    breaks = colors$Variable, 
+    values = colors$Linetype, 
+    labels = colors$Label
+  ) +
   theme(
+    legend.key.height = unit(0.25, "cm"), 
     panel.grid.major = element_line(linewidth = 0.2),  
-    panel.grid.minor = element_line(linewidth = 0.1),
-    plot.margin = margin(t=4, r=8, b=2, l=4, "pt")
+    panel.grid.minor = element_line(linewidth = 0.1)
   )
 pp_sil
 
@@ -344,7 +376,7 @@ pp_sil
 # ppi coverage plot
 pc_ppi = dc %>%
   filter(method == "ppi") %>% 
-  ggplot(aes(N, 100*coverage, color=x)) + 
+  ggplot(aes(N, 100*coverage, color=x, linetype = x)) + 
   geom_hline(
     yintercept = 95, 
     color = "darkgrey",
@@ -353,10 +385,11 @@ pc_ppi = dc %>%
   geom_line() +
   labs(
     x = "Number of silicon subjects N", 
-    y="Percentage of CIs that cover parameter"
+    y = "Percentage of CIs that cover parameter"
   ) +
   guides(
-    color = "none"
+    color = "none",
+    linetype = "none"
   ) +
   scale_x_continuous(
     labels = label_comma(),
@@ -367,21 +400,28 @@ pc_ppi = dc %>%
     limits = c(0,100)
   ) + 
   scale_color_manual(
+    name = "Scenario\nAttribute",
     breaks = colors$Variable, 
     values = colors$Code, 
     labels = colors$Label
   ) +
+  scale_linetype_manual(
+    name = "Scenario\nAttribute",
+    breaks = colors$Variable, 
+    values = colors$Linetype, 
+    labels = colors$Label
+  ) +
   theme(
+    legend.key.height = unit(0.25, "cm"), 
     panel.grid.major = element_line(linewidth = 0.2), 
-    panel.grid.minor = element_line(linewidth = 0.1),
-    plot.margin = margin(t=4, r=8, b=2, l=4, "pt")
+    panel.grid.minor = element_line(linewidth = 0.1)
   )
 pc_ppi
 
 # silicon sampling coverage plot
 pc_sil = dc %>%
   filter(method == "sil") %>% 
-  ggplot(aes(N, 100*coverage, color=x)) + 
+  ggplot(aes(N, 100*coverage, color=x, linetype = x)) + 
   geom_hline(
     yintercept = 95, 
     color = "darkgrey", 
@@ -400,17 +440,25 @@ pc_sil = dc %>%
     x = "Number of silicon subjects N", 
     y = "Percentage of CIs that cover parameter") +
   guides(
-    color = "none"
+    color = "none",
+    linetype = "none"
   ) +
   scale_color_manual(
+    name = "Scenario\nAttribute",
     breaks = colors$Variable, 
     values = colors$Code, 
     labels = colors$Label
   ) +
+  scale_linetype_manual(
+    name = "Scenario\nAttribute",
+    breaks = colors$Variable, 
+    values = colors$Linetype, 
+    labels = colors$Label
+  ) +
   theme(
+    legend.key.height = unit(0.25, "cm"), 
     panel.grid.major = element_line(linewidth = 0.2),  
-    panel.grid.minor = element_line(linewidth = 0.1),
-    plot.margin = margin(t=4, r=8, b=2, l=4, "pt")
+    panel.grid.minor = element_line(linewidth = 0.1)
   ) 
 
 pc_sil
@@ -433,7 +481,8 @@ p = (pb_ppi+pb_sil) / (pp_ppi+pp_sil) / (pc_ppi+pc_sil) +
   theme(
     legend.position = "bottom", 
     plot.title = element_text(hjust = .5, vjust = -3, size = 15),
-    plot.margin = margin(t=4, r=8, b=2, l=4, "pt"),
+    plot.margin = margin(t=4, r=8, b=2, l=2, "pt"),
+    legend.margin = margin(t=4, r=0, b=2, l=-35, "pt"),
     plot.tag = element_text(hjust=1, face = "bold")
   )
 

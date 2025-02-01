@@ -69,20 +69,34 @@ add_power_curves = function(p, N, n0, rho, color = "black", label = FALSE) {
     mutate(n = power_curve(N, n0, rho))
   if (label) {
     p = p + 
-      geom_line(aes(x = N, y = n, group = n0, color = factor(n0)), data = df) + 
+      geom_line(
+        aes(x = N, y = n, group = n0, color = factor(n0), linetype = factor(n0)), 
+        data = df,
+        linewidth = 0.55
+      ) + 
       labs(
-        title = "Finding the most powerful pair (n, N) for a given budget", 
-        color = "Effective\nsample size",
+        title = "Finding the most powerful pair for a given budget", 
         x = "Number of silicon subjects N",
         y = "Number of human subjects n"
       ) +
       scale_color_manual(
+        name = "Effective\nsample size",
         breaks = c(300,250,200,150), 
         values = c("#99000d","#a50f15","#de2d26","#fb6a4a")
+      ) +
+      scale_linetype_manual(
+        name = "Effective\nsample size",
+        breaks = c(300,250,200,150), 
+        values = c("dotted","dashed","longdash","solid")
       ) 
   } else {
     p = p + 
-      geom_line(aes(x = N, y = n, group = n0), data = df, color = color)
+      geom_line(
+        aes(x = N, y = n, group = n0), 
+        data = df, 
+        color = color,
+        linewidth = 0.55
+      )
   }
   return(p)
 }
@@ -97,20 +111,34 @@ add_cost_curves = function(p, N, n0, gamma, cost_Y, color = "black", label = FAL
            cost = cost_Y*n0)
   if (label) {
     p = p + 
-      geom_line(aes(x = N, y = n, group = n0, color = factor(cost)), data = df) + 
+      geom_line(
+        aes(x = N, y = n, group = n0, color = factor(cost), linetype = factor(cost)), 
+        data = df,
+        linewidth = 0.55
+      ) + 
       labs(
-        title = "Finding the cheapest pair (n, N) for a given effective sample size", 
-        color = "Budget",
+        title = "Finding the cheapest pair for a given effective sample size", 
         x = "Number of silicon subjects N",
         y = "Number of human subjects n"
       ) +
       scale_color_manual(
+        name = "Budget",
         breaks = c(225,200,175,150), 
         values = c("#005a32","#006d2c","#238b45","#74c476")
+      ) +
+      scale_linetype_manual(
+        name = "Budget",
+        breaks = c(225,200,175,150), 
+        values = c("dotted","dashed","longdash","solid")
       ) 
   } else {
     p = p + 
-      geom_line(aes(x = N, y = n, group = n0), data = df, color = color)
+      geom_line(
+        aes(x = N, y = n, group = n0), 
+        data = df, 
+        color = color,
+        linewidth = 0.55
+      )
   }
   
   
